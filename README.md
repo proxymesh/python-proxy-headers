@@ -63,3 +63,32 @@ r.headers['X-ProxyMesh-IP']
 	* tested on python3.7 & requests 2.31.0
 	* tested with python3.12 & requests 2.32.3
 8. create adapters/extension for httpx library too
+	httpx Proxy class has headers attribute
+	can pass Proxy instance to HTTPTransport __init__()
+	if pass in Proxy, uses httpcore.HTTPProxy class for _pool
+	Client class can be given Proxy on __init__(), passes through to _init_proxy_transport() which creates a HTTPTransport instance
+	does not parse proxy response headers by default
+	https requests go through TunnelHTTPConnection
+
+passing in proxy headers works
+``` python
+proxy = httpx.Proxy('http://de.proxymesh.com:31280', headers={'X-ProxyMesh-IP': '134.209.244.192'})
+mounts = {'http://': httpx.HTTPTransport(proxy=proxy), 'https://': httpx.HTTPTransport(proxy=proxy)}
+with httpx.Client(mounts=mounts) as client:
+	r = client.get('https://proxymesh.com/api/headers/')
+```
+
+getting response headers works
+``` python
+import http
+from python_proxy_headers.httpx_proxy import HTTPProxyTransport
+proxy = httpx.Proxy('http://de.proxymesh.com:31280', headers={'X-ProxyMesh-IP': '134.209.244.192'})
+mounts = {'http://': HTTPProxyTransport(proxy=proxy), 'https://': HTTPProxyTransport(proxy=proxy)}
+with httpx.Client(mounts=mounts) as client:
+	r = client.get('https://proxymesh.com/api/headers/')
+r.headers['X-ProxyMesh-IP']
+```
+
+9. Figure out if httpx async is worth extending
+10. Is there a requests async library worth extending?
+11. Update proxy-examples repository
