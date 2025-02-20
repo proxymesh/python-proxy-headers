@@ -72,6 +72,7 @@ r.headers['X-ProxyMesh-IP']
 
 passing in proxy headers works
 ``` python
+import httpx
 proxy = httpx.Proxy('http://de.proxymesh.com:31280', headers={'X-ProxyMesh-IP': '134.209.244.192'})
 mounts = {'http://': httpx.HTTPTransport(proxy=proxy), 'https://': httpx.HTTPTransport(proxy=proxy)}
 with httpx.Client(mounts=mounts) as client:
@@ -80,15 +81,28 @@ with httpx.Client(mounts=mounts) as client:
 
 getting response headers works
 ``` python
-import http
+import httpx
 from python_proxy_headers.httpx_proxy import HTTPProxyTransport
 proxy = httpx.Proxy('http://de.proxymesh.com:31280', headers={'X-ProxyMesh-IP': '134.209.244.192'})
 mounts = {'http://': HTTPProxyTransport(proxy=proxy), 'https://': HTTPProxyTransport(proxy=proxy)}
 with httpx.Client(mounts=mounts) as client:
 	r = client.get('https://proxymesh.com/api/headers/')
+
+r.headers['X-ProxyMesh-IP']
+```
+
+async
+``` python
+import httpx
+from python_proxy_headers.httpx_proxy import AsyncHTTPProxyTransport
+proxy = httpx.Proxy('http://de.proxymesh.com:31280', headers={'X-ProxyMesh-IP': '134.209.244.192'})
+mounts = {'http://': AsyncHTTPProxyTransport(proxy=proxy), 'https://': AsyncHTTPProxyTransport(proxy=proxy)}
+async with httpx.AsyncClient(mounts=mounts) as client:
+	r = await client.get('https://proxymesh.com/api/headers/')
+
 r.headers['X-ProxyMesh-IP']
 ```
 
 9. Figure out if httpx async is worth extending
-10. Is there a requests async library worth extending?
+10. Is there a requests async library worth extending? aiohttp
 11. Update proxy-examples repository
