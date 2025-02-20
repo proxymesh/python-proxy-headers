@@ -91,7 +91,17 @@ with httpx.Client(mounts=mounts) as client:
 r.headers['X-ProxyMesh-IP']
 ```
 
-async
+helper methods
+``` python
+import httpx
+from python_proxy_headers import httpx_proxy
+proxy = httpx.Proxy('http://de.proxymesh.com:31280', headers={'X-ProxyMesh-IP': '134.209.244.192'})
+r = httpx_proxy.get('https://proxymesh.com/api/headers/', proxy=proxy)
+r.headers['X-ProxyMesh-IP']
+```
+
+9. Figure out if httpx async is worth extending
+
 ``` python
 import httpx
 from python_proxy_headers.httpx_proxy import AsyncHTTPProxyTransport
@@ -103,6 +113,7 @@ async with httpx.AsyncClient(mounts=mounts) as client:
 r.headers['X-ProxyMesh-IP']
 ```
 
-9. Figure out if httpx async is worth extending
 10. Is there a requests async library worth extending? aiohttp
 11. Update proxy-examples repository
+
+**TODO: rename modules to be more clear**

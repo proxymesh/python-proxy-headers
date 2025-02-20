@@ -1,3 +1,4 @@
+from contextlib import contextmanager
 from httpcore._sync.http_proxy import HTTPProxy, TunnelHTTPConnection, merge_headers, logger
 from httpcore._sync.http11 import HTTP11Connection
 from httpcore._async.http_proxy import AsyncHTTPProxy, AsyncTunnelHTTPConnection
@@ -6,8 +7,8 @@ from httpcore._models import URL, Request
 from httpcore._exceptions import ProxyError
 from httpcore._ssl import default_ssl_context
 from httpcore._trace import Trace
-from httpx import AsyncHTTPTransport, HTTPTransport
-from httpx._config import DEFAULT_LIMITS, Proxy, create_ssl_context
+from httpx import AsyncHTTPTransport, HTTPTransport, Client
+from httpx._config import DEFAULT_LIMITS, DEFAULT_TIMEOUT_CONFIG, Proxy, create_ssl_context
 
 class ProxyTunnelHTTPConnection(TunnelHTTPConnection):
 	# Unfortunately the only way to get connect_response.headers into the Response
@@ -312,3 +313,64 @@ class AsyncHTTPProxyTransport(AsyncHTTPTransport):
 			)
 		else:
 			super().__init__(verify, cert, trust_env, http1, http2, limits, proxy, uds, local_address, retries, socket_options)
+
+def request(method: str,
+			url: URL | str,
+			*,
+			cookies = None,
+			proxy = None,
+			timeout = DEFAULT_TIMEOUT_CONFIG,
+			verify = True,
+			trust_env: bool = True,
+			**kwargs):
+	transport = HTTPProxyTransport(proxy=proxy)
+	with Client(
+		cookies=cookies,
+		verify=verify,
+		timeout=timeout,
+		trust_env=trust_env,
+		mounts={'http://': transport, 'https://': transport}
+	) as client:
+		return client.request(method=method, url=url, **kwargs)
+
+def get(*args, **kwargs):
+	return request('GET', *args, **kwargs)
+
+def options(*args, **kwargs):
+	return request('OPTIONS', *args, **kwargs)
+
+def head(*args, **kwargs):
+	return request('HEAD', *args, **kwargs)
+
+def post(*args, **kwargs):
+	return request('POST', *args, **kwargs)
+
+def put(*args, **kwargs):
+	return request('PUT', *args, **kwargs)
+
+def patch(*args, **kwargs):
+	return request('PATCH', *args, **kwargs)
+
+def delete(*args, **kwargs):
+	return request('DELETE', *args, **kwargs)
+
+@contextmanager
+def stream(method: str,
+		   url: URL | str,
+		   *,
+		   cookies = None,
+		   proxy = None,
+		   timeout = DEFAULT_TIMEOUT_CONFIG,
+		   verify = True,
+		   trust_env: bool = True,
+		   **kwargs):
+	transport = HTTPProxyTransport(proxy=proxy)
+	with Client(
+		cookies=cookies,
+		verify=verify,
+		timeout=timeout,
+		trust_env=trust_env,
+		mounts={'http://': transport, 'https://': transport}
+	) as client:
+		with client.stream(method=method, url=url, **kwargs) as response:
+			yield response
