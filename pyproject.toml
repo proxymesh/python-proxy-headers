@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "python-proxy-headers"
+version = "0.1.0"
+authors = [
+  { name="ProxyMesh", email="support@proxymesh.com" },
+]
+description = "Handle custom proxy headers for http requests in various python libraries"
+readme = "README.md"
+requires-python = ">=3.8"
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "Operating System :: OS Independent",
+	"License :: OSI Approved :: BSD License",
+	"Intended Audience :: Developers",
+	"Topic :: Internet :: WWW/HTTP",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+]
+
+[project.urls]
+Homepage = "https://github.com/proxymesh/python-proxy-headers"
+Changelog = "https://github.com/proxymesh/python-proxy-headers/commits/main/"
+Issues = "https://github.com/proxymesh/python-proxy-headers/issues"
