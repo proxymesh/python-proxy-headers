@@ -22,6 +22,8 @@ Examples for how to use these extension modules are described below. You must fi
 
 This package does not have any dependencies because we don't know which module you want to use.
 
+You can also find more example code in our [proxy-examples for python](https://github.com/proxymesh/proxy-examples/tree/main/python).
+
 ## urllib3
 
 If you just want to send custom proxy headers, but don't need to receive proxy response headers, then you can [urllib3.ProxyManager](https://urllib3.readthedocs.io/en/stable/reference/urllib3.poolmanager.html#urllib3.ProxyManager), like so:
