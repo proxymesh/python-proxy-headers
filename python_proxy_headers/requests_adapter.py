@@ -1,6 +1,6 @@
 from requests.adapters import HTTPAdapter
 from requests.sessions import Session
-from .connection import proxy_from_url
+from .urllib3_proxy_manager import proxy_from_url
 
 class HTTPProxyHeaderAdapter(HTTPAdapter):
 	def __init__(self, proxy_headers=None):

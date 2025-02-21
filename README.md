@@ -44,8 +44,8 @@ r = proxy.request('GET', 'https://proxymesh.com/api/headers/')
 2. potentially create helper method(s) for doing this
 3. figure out how to patch or extend urllib3 ProxyManager to get proxy response headers in python3.12
 ``` python
-from python_proxy_headers import connection
-proxy = connection.ProxyHeaderManager('http://de.proxymesh.com:31280', proxy_headers={'X-ProxyMesh-IP': '46.101.181.63'})
+from python_proxy_headers import urllib3_proxy_manager
+proxy = urllib3_proxy_manager.ProxyHeaderManager('http://de.proxymesh.com:31280', proxy_headers={'X-ProxyMesh-IP': '46.101.181.63'})
 r = proxy.request('GET', 'https://proxymesh.com/api/headers/')
 r.headers['X-ProxyMesh-IP']
 ```
@@ -55,8 +55,8 @@ r.headers['X-ProxyMesh-IP']
 5. figure out how python requests uses urllib3 and easiest method for passing in proxy headers
 6. potentially create helper methods for doing this
 ``` python
-from python_proxy_headers import adapter
-r = adapter.get('https://proxymesh.com/api/headers/', proxies={'http': 'http://de.proxymesh.com:31280', 'https': 'http://de.proxymesh.com:31280'}, proxy_headers={'x-proxymesh-ip': '46.101.236.88'})
+from python_proxy_headers import requests_adapter
+r = requests_adapter.get('https://proxymesh.com/api/headers/', proxies={'http': 'http://de.proxymesh.com:31280', 'https': 'http://de.proxymesh.com:31280'}, proxy_headers={'x-proxymesh-ip': '46.101.236.88'})
 r.headers['X-ProxyMesh-IP']
 ```
 7. pass proxy response headers from urllib3 functions back to requests response
