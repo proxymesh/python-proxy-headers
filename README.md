@@ -1,14 +1,15 @@
 The `python-proxy-headers` package provides support for handling custom proxy headers when making HTTP requests in various python modules.
 
-We currently add support to the following packages:
-* urllib3
-* requests
-* httpx
-* aiohttp
+We currently provide extensions to the following packages:
 
-None of these modules provide good support for parsing custom response headers from proxy servers. And some of them make it hard to send custom headers to proxy servers. So we at [ProxyMesh](https://proxymesh.com) made these extension modules to support our customers that use Python and want to use custom headers to control our proxy behavior. But these modules can work for any custom headers through any proxy.
+* [urllib3](https://urllib3.readthedocs.io/en/stable/)
+* [requests](https://docs.python-requests.org/en/latest/index.html)
+* [httpx](https://www.python-httpx.org/)
+* [aiohttp](https://docs.aiohttp.org/en/stable/index.html)
 
-Examples for how to use our support modules are described below.
+None of these modules provide good support for parsing custom response headers from proxy servers. And some of them make it hard to send custom headers to proxy servers. So we at [ProxyMesh](https://proxymesh.com) made these extension modules to support our customers that use Python and want to use custom headers to control our proxy behavior. But these modules can work for handling custom headers with any proxy.
+
+Examples for how to use these extension modules are described below.
 
 ## urllib3
 
@@ -102,7 +103,7 @@ r = httpx_proxy.get('https://api.ipify.org?format=json', proxy=proxy)
 r.headers['X-ProxyMesh-IP']
 ```
 
-And finally, httpx supports async requests, so provide an async extension too:
+And finally, httpx supports async requests, so we provide an async extension too:
 
 ``` python
 import httpx
@@ -114,3 +115,6 @@ async with httpx.AsyncClient(mounts={'http://': transport, 'https://': transport
 
 r.headers['X-ProxyMesh-IP']
 ```
+
+Our httpx helper module internally provides extension classes for [httpcore](https://www.encode.io/httpcore/), for handling proxy headers over tunnel connections.
+You can use those classes too if you're building on top of httpcore.
