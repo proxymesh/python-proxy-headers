@@ -114,6 +114,18 @@ r.headers['X-ProxyMesh-IP']
 ```
 
 10. Is there a requests async library worth extending? aiohttp
+
+proxy headers works
+tested with aiohttp 3.11.12 and python3.12
+``` python
+from python_proxy_headers import aiohttp_proxy
+async with aiohttp_proxy.ProxyClientSession() as session:
+	async with session.get('https://proxymesh.com/api/headers/', proxy="http://de.proxymesh.com:31280", proxy_headers={'X-ProxyMesh-IP': '46.101.236.88'}) as r:
+		await r.text()
+
+r.headers['X-ProxyMesh-IP']
+```
+
 11. Update proxy-examples repository
 
 **TODO: rename modules to be more clear**
