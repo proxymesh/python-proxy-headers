@@ -27,9 +27,11 @@ Installation
 
 To use these extension modules, you must first do the following:
 
-1. Install the package::
+1. Install the package:
 
-   ``pip install python-proxy-headers``
+   .. code-block:: bash
+
+      pip install python-proxy-headers
 
 2. Install the appropriate package based on the Python module you want to use.
 
