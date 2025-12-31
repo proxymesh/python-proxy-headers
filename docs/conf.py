@@ -6,7 +6,7 @@
 # -- Project information -----------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
-project = 'python-proxy-headers'
+project = 'Python Proxy Headers'
 copyright = '2025, ProxyMesh'
 author = 'ProxyMesh'
 release = '0.1.0'
@@ -26,3 +26,16 @@ exclude_patterns = ['_build', 'Thumbs.db', '.DS_Store']
 
 html_theme = 'alabaster'
 html_static_path = ['_static']
+
+html_theme_options = {
+    #'github_user': 'proxymesh',
+    #'github_repo': 'python-proxy-headers',
+    #'github_button': True,
+    #'github_type': 'star',
+    #'github_banner': False,
+    'extra_nav_links': {
+        'GitHub': 'https://github.com/proxymesh/python-proxy-headers',
+        'PyPI': 'https://pypi.org/project/python-proxy-headers/',
+        'ProxyMesh': 'https://proxymesh.com',
+    },
+}
