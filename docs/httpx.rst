@@ -3,6 +3,50 @@ httpx
 
 `HTTPX <https://www.python-httpx.org/>`_ is a fully featured HTTP client for Python 3, which provides sync and async APIs, and support for both HTTP/1.1 and HTTP/2. This page describes how to use httpx with proxies and how to interact with proxy headers.
 
+Overview
+--------
+
+httpx provides built-in support for proxies through the ``httpx.Proxy`` class. You can create a proxy object and use it with httpx clients. It supports sending proxy headers by default, though it's not documented. You can use the ``httpx.Proxy`` class with custom headers:
+
+.. code-block:: python
+
+   import httpx
+   from httpx import HTTPProxyTransport
+   proxy = httpx.Proxy('http://PROXYHOST:PORT', headers={'X-ProxyMesh-Country': 'US'})
+   transport = HTTPProxyTransport(proxy=proxy)
+   with httpx.Client(mounts={'http://': transport, 'https://': transport}) as client:
+       r = client.get('https://api.ipify.org?format=json')
+
+This creates a proxy with custom headers and uses it with an httpx client.
+
+To get response headers from a proxy server, you need to use our extension module ``python_proxy_headers.httpx_proxy``:
+
+.. code-block:: python
+
+   import httpx
+   from python_proxy_headers.httpx_proxy import HTTPProxyTransport
+   proxy = httpx.Proxy('http://PROXYHOST:PORT', headers={'X-ProxyMesh-Country': 'US'})
+   transport = HTTPProxyTransport(proxy=proxy)
+   with httpx.Client(mounts={'http://': transport, 'https://': transport}) as client:
+       r = client.get('https://api.ipify.org?format=json')
+   
+   r.headers['X-ProxyMesh-IP']
+
+The ``HTTPProxyTransport`` class from our extension module extends the standard transport to make proxy response headers available in the response headers.
+
+Key Features
+------------
+
+* **send custom proxy headers**
+* **receive proxy response headers**
+* **proxy authentication**
+* **country-based proxy selection**
+* **rotating proxies**
+* **proxy session management**
+* **connection pooling**
+* **HTTP/2 proxy support**
+* **async proxy support**
+
 Using Proxies with httpx
 ------------------------
 

@@ -15,6 +15,18 @@ None of these modules provide good support for parsing custom response headers f
 
 *If you are looking for [Scrapy](https://scrapy.org/) support, please see our [scrapy-proxy-headers](https://github.com/proxymesh/scrapy-proxy-headers) project.*
 
+## Features
+
+* Proxy CONNECT headers support
+* HTTPS tunnel proxy support
+* Proxy IP address selection
+* Country proxy selection
+* Rotating proxy support
+* Proxy session management
+* Proxy connection pooling
+* Async proxy support
+* HTTP/2 proxy support
+
 ## Installation
 
 To use these extension modules, you must first do the following:
@@ -23,6 +35,79 @@ To use these extension modules, you must first do the following:
 2. Install the appropriate package based on the Python library you want to use.
 
 This package does not have any dependencies because we don't know which library you want to use.
+
+## Why Use python-proxy-headers?
+
+The `python-proxy-headers` package is the perfect solution for developers who need to handle custom proxy headers in their Python applications. It provides a simple and easy-to-use interface for managing proxy connections, and it supports a wide range of popular Python libraries. Whether you're using `urllib3`, `requests`, `aiohttp`, or `httpx`, this package has you covered.
+
+## Quick Start
+
+Here are some quick examples to get you started:
+
+### urllib3
+
+import urllib3
+from python_proxy_headers.urllib3 import ProxyHeaders
+
+http = urllib3.PoolManager()
+proxy_headers = ProxyHeaders(http)
+
+# Set a custom header for the proxy
+proxy_headers.set_header('X-Proxy-Header', 'value')
+
+# Make a request using the proxy
+response = http.request('GET', 'https://httpbin.org/get', headers=proxy_headers)
+
+print(response.data)
+
+### requests
+
+import requests
+from python_proxy_headers.requests import ProxyHeaders
+
+session = requests.Session()
+proxy_headers = ProxyHeaders(session)
+
+# Set a custom header for the proxy
+proxy_headers.set_header('X-Proxy-Header', 'value')
+
+# Make a request using the proxy
+response = session.get('https://httpbin.org/get', headers=proxy_headers)
+
+print(response.text)
+
+### aiohttp
+
+import aiohttp
+from python_proxy_headers.aiohttp import ProxyHeaders
+
+async def main():
+    async with aiohttp.ClientSession() as session:
+        proxy_headers = ProxyHeaders(session)
+
+        # Set a custom header for the proxy
+        proxy_headers.set_header('X-Proxy-Header', 'value')
+
+        # Make a request using the proxy
+        async with session.get('https://httpbin.org/get', headers=proxy_headers) as response:
+            print(await response.text())
+
+### httpx
+
+import httpx
+from python_proxy_headers.httpx import ProxyHeaders
+
+async def main():
+    async with httpx.AsyncClient() as client:
+        proxy_headers = ProxyHeaders(client)
+
+        # Set a custom header for the proxy
+        proxy_headers.set_header('X-Proxy-Header', 'value')
+
+        # Make a request using the proxy
+        response = await client.get('https://httpbin.org/get', headers=proxy_headers)
+
+        print(response.text)
 
 ## Documentation
 

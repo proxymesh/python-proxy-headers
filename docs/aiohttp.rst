@@ -3,6 +3,23 @@ aiohttp
 
 The `aiohttp <https://docs.aiohttp.org/en/stable/index.html>`_ library is an async HTTP client/server framework for Python. This page describes how to use aiohttp with proxies and how to interact with proxy headers.
 
+Overview
+--------
+
+aiohttp provides built-in support for proxies through the ``proxy`` parameter in request methods. You can specify a proxy URL for each request. aiohttp supports sending proxy headers via the ``proxy_headers`` parameter, which is documented in the aiohttp documentation. The ``proxy_headers`` parameter allows you to send custom headers to the proxy server. This is useful for controlling proxy behavior, such as selecting a specific country or IP address.
+
+Key Features
+------------
+
+* **send custom proxy headers**: aiohttp supports sending proxy headers via the ``proxy_headers`` parameter, which is documented in the aiohttp documentation. The ``proxy_headers`` parameter allows you to send custom headers to the proxy server. This is useful for controlling proxy behavior, such as selecting a specific country or IP address.
+* **receive proxy response headers**: However, if you want to get proxy response headers, you should use our extension module ``python_proxy_headers.aiohttp_proxy``. The ``ProxyClientSession`` extends the standard ``ClientSession`` to make proxy response headers available in the response headers. This allows you to access information from the proxy server, such as the IP address that was assigned to your request.
+* **proxy authentication**: To use proxy authentication, you can pass the ``proxy_auth`` parameter to any request method. This will send the specified username and password to the proxy server for authentication.
+* **country-based proxy selection**: To select a proxy based on country, you can use the ``proxy_headers`` parameter to specify a country. This will select a proxy in the specified country for the request.
+* **rotating proxies**: To rotate proxies across requests, you can use a list of proxies and select a proxy for each request. This will route each request through a different proxy.
+* **proxy session management**: You can use the built-in proxy support with a ``ClientSession`` by passing the ``proxy`` parameter to the session constructor. This will route all requests made with this session through the specified proxy.
+* **connection pooling**: To use connection pooling, you can use the ``ClientSession`` class. This will use a connection pool to reuse connections for multiple requests.
+* **async proxy support**: The ``ProxyClientSession`` works just like the standard ``ClientSession`` and supports all the same features, including: Connection pooling Cookie handling Timeout configuration SSL verification settings All standard aiohttp request methods are supported: ``get``, ``post``, ``put``, ``delete``, ``patch``, ``head``, and ``options``.
+
 Using Proxies with aiohttp
 ---------------------------
 

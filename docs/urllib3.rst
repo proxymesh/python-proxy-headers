@@ -3,6 +3,22 @@ urllib3
 
 The `urllib3 <https://urllib3.readthedocs.io/en/stable/>`_ library is a powerful HTTP client for Python. This page describes how to use urllib3 with proxies and how to interact with proxy headers.
 
+Overview
+--------
+
+urllib3 provides built-in support for proxies through the ``urllib3.ProxyManager`` class. You can create a proxy manager that routes all requests through a proxy server. The ``ProxyHeaderManager`` extends the standard ``ProxyManager`` to make proxy response headers available in the response headers. This allows you to access information from the proxy server, such as the IP address that was assigned to your request.
+
+Key Features
+------------
+
+* **send custom proxy headers**: If you just want to send custom proxy headers, but don't need to receive proxy response headers, then you can use ``urllib3.ProxyManager`` with the ``proxy_headers`` parameter.
+* **receive proxy response headers**: To get proxy response headers, use our extension module ``python_proxy_headers.urllib3_proxy_manager``.
+* **proxy authentication**: To use proxy authentication, you can use the ``proxy_headers`` parameter to send a ``Proxy-Authorization`` header.
+* **country-based proxy selection**: To select a specific country for your proxy connection, you can use the ``X-ProxyMesh-Country`` header.
+* **rotating proxies**: To rotate proxies across requests, you can use the ``ProxyHeaderManager`` with a list of proxies.
+* **proxy session management**: To ensure session consistency, you can use the ``X-ProxyMesh-IP`` header to ensure you get the same IP address on subsequent requests.
+* **connection pooling**: The ``ProxyHeaderManager`` and ``HTTPSProxyConnectionPool`` classes accept the following parameters for configuring the connection pool: ``num_pools``, ``maxsize``, ``block``.
+
 Using Proxies with urllib3
 --------------------------
 

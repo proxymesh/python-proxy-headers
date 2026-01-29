@@ -3,6 +3,22 @@ requests
 
 The `requests <https://docs.python-requests.org/en/latest/index.html>`_ library is a simple HTTP library for Python. This page describes how to use requests with proxies and how to interact with proxy headers.
 
+Overview
+--------
+
+The `requests <https://docs.python-requests.org/en/latest/index.html>`_ library is a simple HTTP library for Python. This page describes how to use requests with proxies and how to interact with proxy headers. The `requests <https://docs.python-requests.org/en/latest/index.html>`_ library provides built-in support for proxies through the ``proxies`` parameter. You can specify proxies for HTTP and HTTPS requests separately. The requests adapter builds on our ``urllib3_proxy_manager`` module to make it easy to pass in proxy headers and receive proxy response headers. The ``requests_adapter`` module supports all the standard requests methods: ``get``, ``post``, ``put``, ``delete``, ``patch``, ``head``, and ``options``. All standard requests methods are available through the adapter. When using the ``requests_adapter`` module, proxy response headers are automatically available in the response headers. You can also use the adapter with requests Sessions for better connection pooling and cookie handling.
+
+Key Features
+------------
+
+* **send custom proxy headers**
+* **receive proxy response headers**
+* **proxy authentication**
+* **country-based proxy selection**
+* **rotating proxies**
+* **proxy session management**
+* **connection pooling**
+
 Using Proxies with requests
 ---------------------------
 
