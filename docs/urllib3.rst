@@ -92,6 +92,28 @@ Proxy headers are custom HTTP headers that can be used to communicate with proxy
 
 The exact headers available depend on your proxy provider. Check your proxy provider's documentation for the specific headers they support.
 
+API Reference
+-------------
+
+The ``python_proxy_headers.urllib3_proxy_manager`` module provides the following public classes and functions:
+
+ProxyHeaderManager
+~~~~~~~~~~~~~~~~~~
+
+The ``ProxyHeaderManager`` class is the main public class for interacting with proxy headers. It extends ``urllib3.ProxyManager`` to make proxy response headers available in the response headers.
+
+.. autoclass:: python_proxy_headers.urllib3_proxy_manager.ProxyHeaderManager
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+proxy_from_url()
+~~~~~~~~~~~~~~~~
+
+The ``proxy_from_url()`` function is a convenience wrapper around ``ProxyHeaderManager`` that creates a proxy manager from a URL string, similar to urllib3's standard ``proxy_from_url()`` function.
+
+.. autofunction:: python_proxy_headers.urllib3_proxy_manager.proxy_from_url
+
 Internal Classes
 ----------------
 
@@ -114,6 +136,11 @@ The ``HTTPSProxyConnection`` class extends the standard ``HTTPSConnection`` to c
 
 The ``get_proxy_response_headers()`` method returns a dictionary containing the headers from the proxy's CONNECT response, or ``None`` if the CONNECT request hasn't been sent yet.
 
+.. autoclass:: python_proxy_headers.urllib3_proxy_manager.HTTPSProxyConnection
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
 HTTPSProxyConnectionPool
 ~~~~~~~~~~~~~~~~~~~~~~~~
 
@@ -124,4 +151,25 @@ The ``HTTPSProxyConnectionPool`` class extends ``HTTPSConnectionPool`` to automa
 3. Merges these headers into the response headers when ``urlopen()`` is called
 
 This ensures that proxy response headers are automatically available in the response object returned to your application.
+
+.. autoclass:: python_proxy_headers.urllib3_proxy_manager.HTTPSProxyConnectionPool
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Connection Pool Configuration
+---------------------------
+
+The ``ProxyHeaderManager`` and ``HTTPSProxyConnectionPool`` classes accept the following parameters for configuring the connection pool:
+
+* ``num_pools``: The number of connection pools to use. This is used to distribute requests across multiple pools, which can improve performance and reduce contention. The default is 1.
+* ``maxsize``: The maximum number of connections to keep in the pool. This is used to limit the number of open connections, which can help reduce resource usage and improve performance. The default is 10.
+* ``block``: Whether to block when the pool is full. If ``True``, the pool will block until a connection is available. If ``False``, the pool will raise a ``PoolError`` if the pool is full. The default is ``False``.
+
+.. code-block:: python
+
+   from python_proxy_headers import urllib3_proxy_manager
+   proxy = urllib3_proxy_manager.ProxyHeaderManager('http://PROXYHOST:PORT', num_pools=5, maxsize=20, block=True)
+
+This will create a proxy manager with 5 connection pools, each with a maximum of 20 connections. The pool will block when the pool is full.
 

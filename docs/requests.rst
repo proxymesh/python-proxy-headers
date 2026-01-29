@@ -123,3 +123,121 @@ You can also use the adapter with requests Sessions for better connection poolin
                    proxies=proxies, 
                    proxy_headers={'X-ProxyMesh-Country': 'US'})
 
+API Reference
+-------------
+
+HTTPProxyHeaderAdapter
+~~~~~~~~~~~~~~~~~~~~~~
+
+The adapter class for sending custom proxy headers and receiving proxy response headers.
+
+.. autoclass:: python_proxy_headers.requests_adapter.HTTPProxyHeaderAdapter
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+ProxySession
+~~~~~~~~~~~~
+
+The session class for using the adapter with requests Sessions.
+
+.. autoclass:: python_proxy_headers.requests_adapter.ProxySession
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+request()
+~~~~~~~~~
+
+The main function for sending HTTP requests with custom proxy headers.
+
+.. autofunction:: python_proxy_headers.requests_adapter.request
+
+get()
+~~~~
+
+The function for sending HTTP GET requests with custom proxy headers.
+
+.. autofunction:: python_proxy_headers.requests_adapter.get
+
+post()
+~~~~~
+
+The function for sending HTTP POST requests with custom proxy headers.
+
+.. autofunction:: python_proxy_headers.requests_adapter.post
+
+put()
+~~~~~
+
+The function for sending HTTP PUT requests with custom proxy headers.
+
+.. autofunction:: python_proxy_headers.requests_adapter.put
+
+delete()
+~~~~~~~
+
+The function for sending HTTP DELETE requests with custom proxy headers.
+
+.. autofunction:: python_proxy_headers.requests_adapter.delete
+
+patch()
+~~~~~~~
+
+The function for sending HTTP PATCH requests with custom proxy headers.
+
+.. autofunction:: python_proxy_headers.requests_adapter.patch
+
+head()
+~~~~~~~
+
+The function for sending HTTP HEAD requests with custom proxy headers.
+
+.. autofunction:: python_proxy_headers.requests_adapter.head
+
+options()
+~~~~~~~~~
+
+The function for sending HTTP OPTIONS requests with custom proxy headers.
+
+.. autofunction:: python_proxy_headers.requests_adapter.options
+
+Connection Pool Configuration
+---------------------------
+
+You can configure the connection pool for the adapter using the ``pool_connections`` and ``pool_maxsize`` parameters.
+
+.. code-block:: python
+
+   from python_proxy_headers import requests_adapter
+   import requests
+   
+   session = requests.Session()
+   session.mount('http://', requests_adapter.HTTPAdapter(pool_connections=10, pool_maxsize=10))
+   session.mount('https://', requests_adapter.HTTPAdapter(pool_connections=10, pool_maxsize=10))
+   
+   r = session.get('https://api.example.com', 
+                   proxies=proxies, 
+                   proxy_headers={'X-ProxyMesh-Country': 'US'})
+
+Proxy Authentication
+-------------------
+
+You can use the ``auth`` parameter to pass in a tuple of username and password for proxy authentication.
+
+.. code-block:: python
+
+   from python_proxy_headers import requests_adapter
+   import requests
+   
+   proxies = {
+       'http': 'http://PROXYHOST:PORT',
+       'https': 'http://PROXYHOST:PORT'
+   }
+   auth = ('username', 'password')
+   
+   r = requests_adapter.get('https://api.ipify.org?format=json', 
+                            proxies=proxies, 
+                            proxy_headers={'X-ProxyMesh-Country': 'US'}, 
+                            auth=auth)
+

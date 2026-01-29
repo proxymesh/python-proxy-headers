@@ -226,3 +226,135 @@ These classes are used internally by ``HTTPProxyTransport`` and ``AsyncHTTPProxy
 
 If you're building custom functionality on top of httpcore, you can import and use these classes directly, but note that they depend on httpcore's internal APIs which may change between versions.
 
+API Reference
+-------------
+
+HTTPProxyTransport
+~~~~~~~~~~~~~~~~~~
+
+The transport class for synchronous HTTP requests.
+
+.. class:: HTTPProxyTransport
+
+   .. method:: __init__(proxy, **kwargs)
+
+      :param proxy: The proxy to use.
+      :type proxy: httpx.Proxy
+      :param kwargs: Additional keyword arguments to pass to the underlying transport.
+
+   .. method:: request(method, url, headers=None, stream=None, timeout=None)
+
+      :param method: The HTTP method to use.
+      :type method: str
+      :param url: The URL to request.
+      :type url: str
+      :param headers: The headers to include in the request.
+      :type headers: dict
+      :param stream: The stream to use for the request.
+      :type stream: httpx._types.StreamType
+      :param timeout: The timeout to use for the request.
+      :type timeout: httpx._types.TimeoutTypes
+      :return: The response object.
+      :rtype: httpx.Response
+
+AsyncHTTPProxyTransport
+~~~~~~~~~~~~~~~~~~~~~~
+
+The transport class for asynchronous HTTP requests.
+
+.. class:: AsyncHTTPProxyTransport
+
+   .. method:: __init__(proxy, **kwargs)
+
+      :param proxy: The proxy to use.
+      :type proxy: httpx.Proxy
+      :param kwargs: Additional keyword arguments to pass to the underlying transport.
+
+   .. method:: request(method, url, headers=None, stream=None, timeout=None)
+
+      :param method: The HTTP method to use.
+      :type method: str
+      :param url: The URL to request.
+      :type url: str
+      :param headers: The headers to include in the request.
+      :type headers: dict
+      :param stream: The stream to use for the request.
+      :type stream: httpx._types.StreamType
+      :param timeout: The timeout to use for the request.
+      :type timeout: httpx._types.TimeoutTypes
+      :return: The response object.
+      :rtype: httpx.Response
+
+request()
+~~~~~~~~~
+
+The function to make a request.
+
+.. function:: request(method, url, headers=None, stream=None, timeout=None)
+
+   :param method: The HTTP method to use.
+   :type method: str
+   :param url: The URL to request.
+   :type url: str
+   :param headers: The headers to include in the request.
+   :type headers: dict
+   :param stream: The stream to use for the request.
+   :type stream: httpx._types.StreamType
+   :param timeout: The timeout to use for the request.
+   :type timeout: httpx._types.TimeoutTypes
+   :return: The response object.
+   :rtype: httpx.Response
+
+Helper Methods
+~~~~~~~~~~~~~~
+
+This module also provides helper methods similar to ``requests`` for convenience:
+
+.. code-block:: python
+
+   import httpx
+   from python_proxy_headers import httpx_proxy
+   proxy = httpx.Proxy('http://PROXYHOST:PORT', headers={'X-ProxyMesh-Country': 'US'})
+   r = httpx_proxy.get('https://api.ipify.org?format=json', proxy=proxy)
+   r.headers['X-ProxyMesh-IP']
+
+The helper module supports all standard HTTP methods: ``get``, ``post``, ``put``, ``delete``, ``patch``, ``head``, and ``options``.
+
+stream()
+~~~~~~~~
+
+For streaming large responses, you can use the ``stream`` context manager:
+
+.. code-block:: python
+
+   import httpx
+   from python_proxy_headers import httpx_proxy
+   
+   proxy = httpx.Proxy('http://PROXYHOST:PORT', headers={'X-ProxyMesh-Country': 'US'})
+   
+   with httpx_proxy.stream('GET', 'https://api.example.com/large-file', proxy=proxy) as response:
+       # Access proxy response headers
+       proxy_ip = response.headers.get('X-ProxyMesh-IP')
+       print(f"Proxy IP: {proxy_ip}")
+       
+       # Stream the response content
+       for chunk in response.iter_bytes():
+           # Process each chunk as it arrives
+           print(f"Received {len(chunk)} bytes")
+
+Built-in Support
+-----------------
+
+httpx supports sending proxy headers via headers parameter
+
+.. code-block:: python
+
+   import httpx
+   from httpx import HTTPProxyTransport
+   proxy = httpx.Proxy('http://PROXYHOST:PORT', headers={'X-ProxyMesh-Country': 'US'})
+   transport = HTTPProxyTransport(proxy=proxy)
+   with httpx.Client(mounts={'http://': transport, 'https://': transport}) as client:
+       r = client.get('https://api.ipify.org?format=json')
+
+This creates a proxy with custom headers and uses it with an httpx client.
+

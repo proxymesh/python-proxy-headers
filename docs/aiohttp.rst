@@ -101,3 +101,64 @@ The ``ProxyClientSession`` works just like the standard ``ClientSession`` and su
 
 All standard aiohttp request methods are supported: ``get``, ``post``, ``put``, ``delete``, ``patch``, ``head``, and ``options``.
 
+API Reference
+-------------
+
+This section provides detailed documentation for all classes and methods in the ``python_proxy_headers.aiohttp_proxy`` module.
+
+ProxyClientSession
+~~~~~~~~~~~~~~~~~~
+
+The main public class for interacting with proxies.
+
+.. autoclass:: python_proxy_headers.aiohttp_proxy.ProxyClientSession
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+ProxyTCPConnector
+~~~~~~~~~~~~~~~~~
+
+The connector class for the ``ProxyClientSession``.
+
+.. autoclass:: python_proxy_headers.aiohttp_proxy.ProxyTCPConnector
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+ProxyClientRequest
+~~~~~~~~~~~~~~~~~~
+
+The request class for the ``ProxyClientSession``.
+
+.. autoclass:: python_proxy_headers.aiohttp_proxy.ProxyClientRequest
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+ProxyClientResponse
+~~~~~~~~~~~~~~~~~~
+
+The response class for the ``ProxyClientSession``.
+
+.. autoclass:: python_proxy_headers.aiohttp_proxy.ProxyClientResponse
+   :members:
+   :undoc-members:
+   :show-inheritance:
+
+Built-in Support
+----------------
+
+aiohttp supports sending proxy headers via the ``proxy_headers`` parameter, which is documented in the aiohttp documentation.
+
+.. code-block:: python
+
+   import aiohttp
+   async with aiohttp.ClientSession() as session:
+       async with session.get('https://api.ipify.org?format=json', 
+                             proxy="http://PROXYHOST:PORT", 
+                             proxy_headers={'X-ProxyMesh-Country': 'US'}) as r:
+           text = await r.text()
+
+The ``proxy_headers`` parameter allows you to send custom headers to the proxy server. This is useful for controlling proxy behavior, such as selecting a specific country or IP address.
+
