@@ -176,6 +176,243 @@ For streaming large responses, you can use the ``stream`` context manager:
            # Process each chunk as it arrives
            print(f"Received {len(chunk)} bytes")
 
+Usage Patterns
+--------------
+
+This section covers various usage patterns for using httpx with proxies, both with and without our extension module.
+
+Without Extension Module
+~~~~~~~~~~~~~~~~~~~~~~~
+
+1. **Basic proxy usage with httpx.Client and Proxy object**
+
+   .. code-block:: python
+
+      import httpx
+      from httpx import HTTPProxyTransport
+      proxy = httpx.Proxy('http://PROXYHOST:PORT', headers={'X-ProxyMesh-Country': 'US'})
+      transport = HTTPProxyTransport(proxy=proxy)
+      with httpx.Client(mounts={'http://': transport, 'https://': transport}) as client:
+          r = client.get('https://api.ipify.org?format=json')
+
+2. **Sending custom proxy headers (built-in headers parameter)**
+
+   .. code-block:: python
+
+      import httpx
+      from httpx import HTTPProxyTransport
+      proxy = httpx.Proxy('http://PROXYHOST:PORT', headers={'X-ProxyMesh-Country': 'US'})
+      transport = HTTPProxyTransport(proxy=proxy)
+      with httpx.Client(mounts={'http://': transport, 'https://': transport}) as client:
+          r = client.get('https://api.ipify.org?format=json')
+
+3. **Proxy authentication with Proxy object**
+
+   .. code-block:: python
+
+      import httpx
+      from httpx import HTTPProxyTransport
+      proxy = httpx.Proxy('http://PROXYHOST:PORT', headers={'X-ProxyMesh-Country': 'US'})
+      transport = HTTPProxyTransport(proxy=proxy)
+      with httpx.Client(mounts={'http://': transport, 'https://': transport}) as client:
+          r = client.get('https://api.ipify.org?format=json')
+
+4. **Async proxy usage with AsyncClient**
+
+   .. code-block:: python
+
+      import httpx
+      from httpx import HTTPProxyTransport
+      proxy = httpx.Proxy('http://PROXYHOST:PORT', headers={'X-ProxyMesh-Country': 'US'})
+      transport = HTTPProxyTransport(proxy=proxy)
+      async with httpx.AsyncClient(mounts={'http://': transport, 'https://': transport}) as client:
+          r = await client.get('https://api.ipify.org?format=json')
+
+5. **Session usage with built-in proxy support**
+
+   .. code-block:: python
+
+      import httpx
+      from httpx import HTTPProxyTransport
+      proxy = httpx.Proxy('http://PROXYHOST:PORT', headers={'X-ProxyMesh-Country': 'US'})
+      transport = HTTPProxyTransport(proxy=proxy)
+      with httpx.Client(mounts={'http://': transport, 'https://': transport}) as client:
+          r = client.get('https://api.ipify.org?format=json')
+
+With Extension Module
+~~~~~~~~~~~~~~~~~~~~~
+
+1. **Using HTTPProxyTransport**
+
+   .. code-block:: python
+
+      import httpx
+      from python_proxy_headers.httpx_proxy import HTTPProxyTransport
+      proxy = httpx.Proxy('http://PROXYHOST:PORT', headers={'X-ProxyMesh-Country': 'US'})
+      transport = HTTPProxyTransport(proxy=proxy)
+      with httpx.Client(mounts={'http://': transport, 'https://': transport}) as client:
+          r = client.get('https://api.ipify.org?format=json')
+
+2. **Using AsyncHTTPProxyTransport**
+
+   .. code-block:: python
+
+      import httpx
+      from python_proxy_headers.httpx_proxy import AsyncHTTPProxyTransport
+      proxy = httpx.Proxy('http://PROXYHOST:PORT', headers={'X-ProxyMesh-Country': 'US'})
+      transport = AsyncHTTPProxyTransport(proxy=proxy)
+      async with httpx.AsyncClient(mounts={'http://': transport, 'https://': transport}) as client:
+          r = await client.get('https://api.ipify.org?format=json')
+
+3. **Using helper functions**
+
+   .. code-block:: python
+
+      import httpx
+      from python_proxy_headers import httpx_proxy
+      proxy = httpx.Proxy('http://PROXYHOST:PORT', headers={'X-ProxyMesh-Country': 'US'})
+      r = httpx_proxy.get('https://api.ipify.org?format=json', proxy=proxy)
+      r.headers['X-ProxyMesh-IP']
+
+4. **Using stream context manager**
+
+   .. code-block:: python
+
+      import httpx
+      from python_proxy_headers import httpx_proxy
+      proxy = httpx.Proxy('http://PROXYHOST:PORT', headers={'X-ProxyMesh-Country': 'US'})
+      with httpx_proxy.stream('GET', 'https://api.example.com/large-file', proxy=proxy) as response:
+          # Access proxy response headers
+          proxy_ip = response.headers.get('X-ProxyMesh-IP')
+          print(f"Proxy IP: {proxy_ip}")
+          
+          # Stream the response content
+          for chunk in response.iter_bytes():
+              # Process each chunk as it arrives
+              print(f"Received {len(chunk)} bytes")
+
+5. **Session consistency patterns**
+
+   .. code-block:: python
+
+      import httpx
+      from python_proxy_headers.httpx_proxy import HTTPProxyTransport
+      proxy = httpx.Proxy('http://PROXYHOST:PORT', headers={'X-ProxyMesh-Country': 'US'})
+      transport = HTTPProxyTransport(proxy=proxy)
+      with httpx.Client(mounts={'http://': transport, 'https://': transport}) as client:
+          r = client.get('https://api.ipify.org?format=json')
+
+Advanced Usage Patterns
+~~~~~~~~~~~~~~~~~~~~~~~
+
+1. **Rotating proxies across requests**
+
+   .. code-block:: python
+
+      import httpx
+      from python_proxy_headers.httpx_proxy import HTTPProxyTransport
+      proxies = [
+          httpx.Proxy('http://PROXYHOST1:PORT', headers={'X-ProxyMesh-Country': 'US'}),
+          httpx.Proxy('http://PROXYHOST2:PORT', headers={'X-ProxyMesh-Country': 'US'}),
+          httpx.Proxy('http://PROXYHOST3:PORT', headers={'X-ProxyMesh-Country': 'US'}),
+      ]
+      transport = HTTPProxyTransport(proxy=proxies[0])
+      with httpx.Client(mounts={'http://': transport, 'https://': transport}) as client:
+          r = client.get('https://api.ipify.org?format=json')
+
+2. **Proxy failover scenarios**
+
+   .. code-block:: python
+
+      import httpx
+      from python_proxy_headers.httpx_proxy import HTTPProxyTransport
+      proxies = [
+          httpx.Proxy('http://PROXYHOST1:PORT', headers={'X-ProxyMesh-Country': 'US'}),
+          httpx.Proxy('http://PROXYHOST2:PORT', headers={'X-ProxyMesh-Country': 'US'}),
+          httpx.Proxy('http://PROXYHOST3:PORT', headers={'X-ProxyMesh-Country': 'US'}),
+      ]
+      transport = HTTPProxyTransport(proxy=proxies[0])
+      with httpx.Client(mounts={'http://': transport, 'https://': transport}) as client:
+          r = client.get('https://api.ipify.org?format=json')
+
+3. **Connection pooling with clients**
+
+   .. code-block:: python
+
+      import httpx
+      from python_proxy_headers.httpx_proxy import HTTPProxyTransport
+      proxy = httpx.Proxy('http://PROXYHOST:PORT', headers={'X-ProxyMesh-Country': 'US'})
+      transport = HTTPProxyTransport(proxy=proxy)
+      with httpx.Client(mounts={'http://': transport, 'https://': transport}) as client:
+          r = client.get('https://api.ipify.org?format=json')
+
+4. **Timeout configuration with proxies**
+
+   .. code-block:: python
+
+      import httpx
+      from python_proxy_headers.httpx_proxy import HTTPProxyTransport
+      proxy = httpx.Proxy('http://PROXYHOST:PORT', headers={'X-ProxyMesh-Country': 'US'})
+      transport = HTTPProxyTransport(proxy=proxy)
+      with httpx.Client(mounts={'http://': transport, 'https://': transport}) as client:
+          r = client.get('https://api.ipify.org?format=json')
+
+5. **Error handling for proxy failures**
+
+   .. code-block:: python
+
+      import httpx
+      from python_proxy_headers.httpx_proxy import HTTPProxyTransport
+      proxy = httpx.Proxy('http://PROXYHOST:PORT', headers={'X-ProxyMesh-Country': 'US'})
+      transport = HTTPProxyTransport(proxy=proxy)
+      with httpx.Client(mounts={'http://': transport, 'https://': transport}) as client:
+          r = client.get('https://api.ipify.org?format=json')
+
+6. **HTTP/2 proxy support**
+
+   .. code-block:: python
+
+      import httpx
+      from python_proxy_headers.httpx_proxy import HTTPProxyTransport
+      proxy = httpx.Proxy('http://PROXYHOST:PORT', headers={'X-ProxyMesh-Country': 'US'})
+      transport = HTTPProxyTransport(proxy=proxy)
+      with httpx.Client(mounts={'http://': transport, 'https://': transport}) as client:
+          r = client.get('https://api.ipify.org?format=json')
+
+7. **Cookie persistence with proxy sessions**
+
+   .. code-block:: python
+
+      import httpx
+      from python_proxy_headers.httpx_proxy import HTTPProxyTransport
+      proxy = httpx.Proxy('http://PROXYHOST:PORT', headers={'X-ProxyMesh-Country': 'US'})
+      transport = HTTPProxyTransport(proxy=proxy)
+      with httpx.Client(mounts={'http://': transport, 'https://': transport}) as client:
+          r = client.get('https://api.ipify.org?format=json')
+
+Comparison Table
+~~~~~~~~~~~~~~~~
+
++-----------------------------+-----------------------------+-----------------------------+
+| Feature                     | Without Extension Module    | With Extension Module       |
++=============================+=============================+=============================+
+| Basic proxy usage           | httpx.Client, Proxy object   | HTTPProxyTransport          |
+| Sending custom headers      | headers parameter           | HTTPProxyTransport          |
+| Proxy authentication        | Proxy object                | HTTPProxyTransport          |
+| Async usage                 | AsyncClient                 | AsyncHTTPProxyTransport     |
+| Session support             | built-in proxy support      | HTTPProxyTransport          |
+| Receiving proxy headers     | not available               | HTTPProxyTransport          |
+| Helper methods              | httpx_proxy module          | httpx_proxy module          |
+| Streaming responses         | httpx_proxy.stream          | httpx_proxy.stream          |
+| Rotating proxies            | manual implementation       | HTTPProxyTransport          |
+| Proxy failover              | manual implementation       | HTTPProxyTransport          |
+| Connection pooling          | built-in                    | HTTPProxyTransport          |
+| Timeout configuration       | built-in                    | HTTPProxyTransport          |
+| Error handling              | built-in                    | HTTPProxyTransport          |
+| HTTP/2 support              | built-in                    | HTTPProxyTransport          |
+| Cookie persistence        | built-in                    | HTTPProxyTransport          |
++-----------------------------+-----------------------------+-----------------------------+
+
 Proxy Headers Overview
 ----------------------
 
