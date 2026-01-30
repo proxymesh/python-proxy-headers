@@ -1,35 +1,98 @@
 urllib3
 =======
 
-The `urllib3 <https://urllib3.readthedocs.io/en/stable/>`_ library is a powerful HTTP client for Python. This page describes how to use urllib3 with proxies and how to interact with proxy headers.
+The `urllib3 <https://urllib3.readthedocs.io/en/stable/>`_ library is a powerful HTTP client for Python. This page describes how to use urllib3 with proxies and how to send and receive custom proxy headers.
+
+Getting Started
+---------------
+
+This section shows you how to quickly get up and running with proxy headers in urllib3.
+
+**Prerequisites:**
+
+1. Install the package:
+
+   .. code-block:: bash
+
+      pip install python-proxy-headers urllib3
+
+2. Import the module:
+
+   .. code-block:: python
+
+      from python_proxy_headers import urllib3_proxy_manager
+
+**Quick Example - Send and Receive Proxy Headers:**
+
+.. code-block:: python
+
+   from python_proxy_headers import urllib3_proxy_manager
+   
+   # Create a proxy manager that captures proxy response headers
+   proxy = urllib3_proxy_manager.ProxyHeaderManager(
+       'http://PROXYHOST:PORT',
+       proxy_headers={'X-ProxyMesh-Country': 'US'}
+   )
+   
+   # Make a request
+   r = proxy.request('GET', 'https://api.ipify.org?format=json')
+   
+   # Access the response data
+   print(r.data.decode())  # {"ip": "..."}
+   
+   # Access proxy response headers (these come from the proxy, not the target server)
+   print(r.headers.get('X-ProxyMesh-IP'))  # The IP address assigned by the proxy
+
+That's it! The ``ProxyHeaderManager`` handles sending your custom headers to the proxy and makes proxy response headers available in the response.
 
 Using Proxies with urllib3
 --------------------------
 
 urllib3 provides built-in support for proxies through the ``urllib3.ProxyManager`` class. You can create a proxy manager that routes all requests through a proxy server.
 
-Basic Proxy Usage
-~~~~~~~~~~~~~~~~~
+Basic Proxy Usage (Standard urllib3)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To use a proxy with urllib3, you can use the standard ``urllib3.ProxyManager``:
+To use a proxy with standard urllib3:
 
 .. code-block:: python
 
    import urllib3
+   
    proxy = urllib3.ProxyManager('http://PROXYHOST:PORT')
    r = proxy.request('GET', 'https://api.ipify.org?format=json')
+   print(r.data.decode())
 
-This creates a proxy manager that will route all requests through the specified proxy server.
+This routes requests through the specified proxy server.
 
-Sending Custom Proxy Headers
-~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+Proxy Authentication
+~~~~~~~~~~~~~~~~~~~~
 
-If you just want to send custom proxy headers, but don't need to receive proxy response headers, then you can use ``urllib3.ProxyManager`` with the ``proxy_headers`` parameter:
+To use a proxy that requires authentication:
 
 .. code-block:: python
 
    import urllib3
-   proxy = urllib3.ProxyManager('http://PROXYHOST:PORT', proxy_headers={'X-ProxyMesh-Country': 'US'})
+   
+   # Include credentials in the URL
+   proxy = urllib3.ProxyManager('http://username:password@PROXYHOST:PORT')
+   r = proxy.request('GET', 'https://api.ipify.org?format=json')
+
+Or use the ``proxy_headers`` parameter to set the ``Proxy-Authorization`` header manually.
+
+Sending Custom Proxy Headers
+----------------------------
+
+If you just want to send custom proxy headers, but don't need to receive proxy response headers, you can use ``urllib3.ProxyManager`` with the ``proxy_headers`` parameter:
+
+.. code-block:: python
+
+   import urllib3
+   
+   proxy = urllib3.ProxyManager(
+       'http://PROXYHOST:PORT',
+       proxy_headers={'X-ProxyMesh-Country': 'US'}
+   )
    r = proxy.request('GET', 'https://api.ipify.org?format=json')
 
 The ``proxy_headers`` parameter allows you to send custom headers to the proxy server. This is useful for controlling proxy behavior, such as selecting a specific country or IP address.
@@ -41,30 +104,58 @@ The ``proxy_headers`` parameter allows you to send custom headers to the proxy s
 Receiving Proxy Response Headers
 ---------------------------------
 
-To get proxy response headers, use our extension module ``python_proxy_headers.urllib3_proxy_manager``:
+Standard urllib3 does not expose proxy response headers from the CONNECT request. To get proxy response headers, use our extension module ``python_proxy_headers.urllib3_proxy_manager``:
 
 .. code-block:: python
 
    from python_proxy_headers import urllib3_proxy_manager
+   
    proxy = urllib3_proxy_manager.ProxyHeaderManager('http://PROXYHOST:PORT')
    r = proxy.request('GET', 'https://api.ipify.org?format=json')
-   r.headers['X-ProxyMesh-IP']
+   
+   # Proxy response headers are now available
+   proxy_ip = r.headers.get('X-ProxyMesh-IP')
+   print(f"Request was made through: {proxy_ip}")
 
 The ``ProxyHeaderManager`` extends the standard ``ProxyManager`` to make proxy response headers available in the response headers. This allows you to access information from the proxy server, such as the IP address that was assigned to your request.
 
 Sending and Receiving Proxy Headers
 ------------------------------------
 
-You can also pass ``proxy_headers`` into our ``ProxyHeaderManager`` as well. For example, you can pass back the same ``X-ProxyMesh-IP`` header to ensure you get the same IP address on subsequent requests:
+You can combine sending custom headers with receiving proxy response headers:
 
 .. code-block:: python
 
    from python_proxy_headers import urllib3_proxy_manager
-   proxy = urllib3_proxy_manager.ProxyHeaderManager('http://PROXYHOST:PORT', proxy_headers={'X-ProxyMesh-IP': 'previous-ip-address'})
+   
+   # Send country preference, receive assigned IP
+   proxy = urllib3_proxy_manager.ProxyHeaderManager(
+       'http://PROXYHOST:PORT',
+       proxy_headers={'X-ProxyMesh-Country': 'US'}
+   )
    r = proxy.request('GET', 'https://api.ipify.org?format=json')
-   r.headers['X-ProxyMesh-IP']
+   
+   # Check which IP was assigned
+   assigned_ip = r.headers.get('X-ProxyMesh-IP')
+   print(f"Assigned IP: {assigned_ip}")
 
-This allows you to both send custom headers to the proxy and receive proxy response headers in a single request.
+You can also pass back the same ``X-ProxyMesh-IP`` header to ensure you get the same IP address on subsequent requests:
+
+.. code-block:: python
+
+   from python_proxy_headers import urllib3_proxy_manager
+   
+   # First request - get an IP
+   proxy = urllib3_proxy_manager.ProxyHeaderManager('http://PROXYHOST:PORT')
+   r = proxy.request('GET', 'https://api.ipify.org?format=json')
+   assigned_ip = r.headers.get('X-ProxyMesh-IP')
+   
+   # Second request - request the same IP
+   proxy = urllib3_proxy_manager.ProxyHeaderManager(
+       'http://PROXYHOST:PORT',
+       proxy_headers={'X-ProxyMesh-IP': assigned_ip}
+   )
+   r = proxy.request('GET', 'https://api.ipify.org?format=json')
 
 Helper Function
 ~~~~~~~~~~~~~~~
@@ -75,7 +166,10 @@ The module also provides a convenience function for creating a ``ProxyHeaderMana
 
    from python_proxy_headers.urllib3_proxy_manager import proxy_from_url
    
-   proxy = proxy_from_url('http://PROXYHOST:PORT', proxy_headers={'X-ProxyMesh-Country': 'US'})
+   proxy = proxy_from_url(
+       'http://PROXYHOST:PORT',
+       proxy_headers={'X-ProxyMesh-Country': 'US'}
+   )
    r = proxy.request('GET', 'https://api.ipify.org?format=json')
    r.headers['X-ProxyMesh-IP']
 
@@ -91,6 +185,39 @@ Proxy headers are custom HTTP headers that can be used to communicate with proxy
 * **Maintain session consistency**: Use headers like ``X-ProxyMesh-IP`` to ensure you get the same IP address across multiple requests
 
 The exact headers available depend on your proxy provider. Check your proxy provider's documentation for the specific headers they support.
+
+API Reference
+-------------
+
+ProxyHeaderManager
+~~~~~~~~~~~~~~~~~~
+
+.. code-block:: python
+
+   from python_proxy_headers.urllib3_proxy_manager import ProxyHeaderManager
+   
+   proxy = ProxyHeaderManager(
+       proxy_url,           # The proxy URL (e.g., 'http://proxy.example.com:8080')
+       proxy_headers=None,  # Optional dict of headers to send to the proxy
+       **kwargs             # Additional arguments passed to urllib3.ProxyManager
+   )
+
+**Parameters:**
+
+* ``proxy_url`` (str): The URL of the proxy server
+* ``proxy_headers`` (dict, optional): Headers to send to the proxy in the CONNECT request
+* ``**kwargs``: Additional arguments passed to the parent ``ProxyManager`` class
+
+proxy_from_url
+~~~~~~~~~~~~~~
+
+.. code-block:: python
+
+   from python_proxy_headers.urllib3_proxy_manager import proxy_from_url
+   
+   proxy = proxy_from_url(url, **kwargs)
+
+A convenience function that creates a ``ProxyHeaderManager`` from a URL string.
 
 Internal Classes
 ----------------
@@ -124,4 +251,3 @@ The ``HTTPSProxyConnectionPool`` class extends ``HTTPSConnectionPool`` to automa
 3. Merges these headers into the response headers when ``urlopen()`` is called
 
 This ensures that proxy response headers are automatically available in the response object returned to your application.
-
