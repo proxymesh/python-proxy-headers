@@ -108,18 +108,94 @@ The exact headers available depend on your proxy provider. Check your proxy prov
 Session Support
 ---------------
 
-You can also use the adapter with requests Sessions for better connection pooling and cookie handling:
+For better connection pooling and cookie handling, you can use ``ProxySession``:
 
 .. code-block:: python
 
-   from python_proxy_headers import requests_adapter
+   from python_proxy_headers.requests_adapter import ProxySession
+   
+   with ProxySession(proxy_headers={'X-ProxyMesh-Country': 'US'}) as session:
+       r = session.get('https://api.example.com', proxies=proxies)
+       proxy_ip = r.headers.get('X-ProxyMesh-IP')
+
+Or you can manually mount the adapter to a standard requests Session:
+
+.. code-block:: python
+
+   from python_proxy_headers.requests_adapter import HTTPProxyHeaderAdapter
    import requests
    
    session = requests.Session()
-   session.mount('http://', requests_adapter.HTTPAdapter())
-   session.mount('https://', requests_adapter.HTTPAdapter())
+   session.mount('http://', HTTPProxyHeaderAdapter(proxy_headers={'X-ProxyMesh-Country': 'US'}))
+   session.mount('https://', HTTPProxyHeaderAdapter(proxy_headers={'X-ProxyMesh-Country': 'US'}))
    
-   r = session.get('https://api.example.com', 
-                   proxies=proxies, 
-                   proxy_headers={'X-ProxyMesh-Country': 'US'})
+   r = session.get('https://api.example.com', proxies=proxies)
+   proxy_ip = r.headers.get('X-ProxyMesh-IP')
+
+Extension Classes
+-----------------
+
+The ``python_proxy_headers.requests_adapter`` module provides extension classes that build on top of the ``urllib3_proxy_manager`` module to integrate proxy header support with the requests library.
+
+HTTPProxyHeaderAdapter
+~~~~~~~~~~~~~~~~~~~~~~
+
+Extends ``requests.adapters.HTTPAdapter`` to use our custom ``ProxyHeaderManager`` for proxy connections. This adapter enables both sending custom proxy headers and receiving proxy response headers.
+
+.. code-block:: python
+
+   from python_proxy_headers.requests_adapter import HTTPProxyHeaderAdapter
+   
+   adapter = HTTPProxyHeaderAdapter(proxy_headers={'X-ProxyMesh-Country': 'US'})
+
+**Constructor Parameters:**
+
+* ``proxy_headers`` (dict, optional): A dictionary of custom headers to send to the proxy server. These headers will be included in the CONNECT request when establishing HTTPS tunnel connections.
+
+The adapter overrides the ``proxy_manager_for`` method to:
+
+1. Check if the proxy URL is already cached in ``self.proxy_manager``
+2. For SOCKS proxies, delegate to the parent class
+3. For HTTP/HTTPS proxies, create a ``ProxyHeaderManager`` from the ``urllib3_proxy_manager`` module with the custom proxy headers
+
+This ensures that all proxy connections made through the adapter will include your custom headers and capture proxy response headers.
+
+ProxySession
+~~~~~~~~~~~~
+
+Extends ``requests.Session`` with pre-configured ``HTTPProxyHeaderAdapter`` instances for both HTTP and HTTPS connections. This provides a convenient way to create a session that automatically handles proxy headers.
+
+.. code-block:: python
+
+   from python_proxy_headers.requests_adapter import ProxySession
+   
+   with ProxySession(proxy_headers={'X-ProxyMesh-Country': 'US'}) as session:
+       session.proxies = {
+           'http': 'http://PROXYHOST:PORT',
+           'https': 'http://PROXYHOST:PORT'
+       }
+       r = session.get('https://api.example.com')
+       proxy_ip = r.headers.get('X-ProxyMesh-IP')
+
+**Constructor Parameters:**
+
+* ``proxy_headers`` (dict, optional): A dictionary of custom headers to send to the proxy server.
+
+The ``ProxySession`` automatically mounts ``HTTPProxyHeaderAdapter`` instances for both ``http://`` and ``https://`` URL schemes, so all requests through the session will use proxy header support.
+
+Helper Functions
+----------------
+
+The module provides convenience functions that mirror the standard ``requests`` API:
+
+* ``request(method, url, proxy_headers=None, **kwargs)`` - Make a request with the specified method
+* ``get(url, proxy_headers=None, **kwargs)`` - Make a GET request
+* ``post(url, proxy_headers=None, **kwargs)`` - Make a POST request
+* ``put(url, proxy_headers=None, **kwargs)`` - Make a PUT request
+* ``patch(url, proxy_headers=None, **kwargs)`` - Make a PATCH request
+* ``delete(url, proxy_headers=None, **kwargs)`` - Make a DELETE request
+* ``head(url, proxy_headers=None, **kwargs)`` - Make a HEAD request
+* ``options(url, proxy_headers=None, **kwargs)`` - Make an OPTIONS request
+
+Each function creates a temporary ``ProxySession`` with the specified ``proxy_headers`` and makes the request. All standard requests parameters (``params``, ``data``, ``json``, ``headers``, ``cookies``, ``auth``, ``proxies``, etc.) are supported.
 
