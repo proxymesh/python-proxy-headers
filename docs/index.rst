@@ -14,6 +14,7 @@ We currently provide extensions to the following packages:
 * :doc:`requests <requests>` - Simple HTTP library for Python
 * :doc:`aiohttp <aiohttp>` - Async HTTP client/server framework
 * :doc:`httpx <httpx>` - Modern HTTP client library
+* :doc:`pycurl <pycurl>` - Python interface to libcurl
 
 Purpose
 -------
@@ -50,6 +51,7 @@ Contents
    requests
    aiohttp
    httpx
+   pycurl
 
 Indices and tables
 ==================
