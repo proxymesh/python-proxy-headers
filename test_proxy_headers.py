@@ -3,15 +3,17 @@
 Test harness for python-proxy-headers extensions.
 
 This script tests each module's ability to:
-1. Make a request through a proxy
+1. Send custom headers to a proxy server
 2. Receive and capture proxy response headers
 3. Extract the specified header (default: X-ProxyMesh-IP)
 
 Configuration via environment variables:
-    PROXY_URL       - Proxy URL (e.g., http://user:pass@proxy.example.com:8080)
-    HTTPS_PROXY     - Fallback if PROXY_URL not set
-    TEST_URL        - URL to request (default: https://httpbin.org/ip)
-    PROXY_HEADER    - Header to check for (default: X-ProxyMesh-IP)
+    PROXY_URL             - Proxy URL (e.g., http://user:pass@proxy.example.com:8080)
+    HTTPS_PROXY           - Fallback if PROXY_URL not set
+    TEST_URL              - URL to request (default: https://httpbin.org/ip)
+    PROXY_HEADER          - Response header to check for (default: X-ProxyMesh-IP)
+    SEND_PROXY_HEADER     - Header name to send to proxy (optional)
+    SEND_PROXY_VALUE      - Header value to send to proxy (optional)
 
 Usage:
     python test_proxy_headers.py [module1] [module2] ...
@@ -22,8 +24,11 @@ Usage:
     # Test specific modules
     python test_proxy_headers.py requests httpx
     
-    # With custom header
+    # With custom response header to check
     PROXY_HEADER=X-Custom-Header python test_proxy_headers.py
+    
+    # Send a custom header to the proxy
+    SEND_PROXY_HEADER=X-ProxyMesh-Country SEND_PROXY_VALUE=US python test_proxy_headers.py
 
 Exit codes:
     0 - All tests passed
@@ -50,6 +55,15 @@ class TestConfig:
     proxy_url: str
     test_url: str
     proxy_header: str
+    send_proxy_header: Optional[str] = None
+    send_proxy_value: Optional[str] = None
+    
+    @property
+    def proxy_headers_to_send(self) -> Dict[str, str]:
+        """Get dict of headers to send to proxy, if configured."""
+        if self.send_proxy_header and self.send_proxy_value:
+            return {self.send_proxy_header: self.send_proxy_value}
+        return {}
     
     @classmethod
     def from_env(cls) -> 'TestConfig':
@@ -62,11 +76,15 @@ class TestConfig:
         
         test_url = os.environ.get('TEST_URL', 'https://httpbin.org/ip')
         proxy_header = os.environ.get('PROXY_HEADER', 'X-ProxyMesh-IP')
+        send_proxy_header = os.environ.get('SEND_PROXY_HEADER')
+        send_proxy_value = os.environ.get('SEND_PROXY_VALUE')
         
         return cls(
             proxy_url=proxy_url,
             test_url=test_url,
-            proxy_header=proxy_header
+            proxy_header=proxy_header,
+            send_proxy_header=send_proxy_header,
+            send_proxy_value=send_proxy_value
         )
 
 
@@ -144,8 +162,11 @@ class Urllib3Test(ModuleTest):
         try:
             from python_proxy_headers.urllib3_proxy_manager import proxy_from_url
             
-            # Create proxy manager (ProxyHeaderManager)
-            manager = proxy_from_url(config.proxy_url)
+            # Create proxy manager (ProxyHeaderManager) with optional proxy headers
+            manager = proxy_from_url(
+                config.proxy_url,
+                proxy_headers=config.proxy_headers_to_send or None
+            )
             
             # Make request
             # The extension merges proxy CONNECT headers into response.headers
@@ -196,8 +217,8 @@ class RequestsTest(ModuleTest):
         try:
             from python_proxy_headers.requests_adapter import ProxySession
             
-            # Create session with proxy headers
-            with ProxySession() as session:
+            # Create session with optional proxy headers to send
+            with ProxySession(proxy_headers=config.proxy_headers_to_send or None) as session:
                 session.proxies = {
                     'http': config.proxy_url,
                     'https': config.proxy_url
@@ -251,12 +272,22 @@ class AiohttpTest(ModuleTest):
         try:
             import asyncio
             from python_proxy_headers.aiohttp_proxy import ProxyClientSession
+            from multidict import CIMultiDict
             
             async def _test_async():
                 # ProxyClientSession automatically includes ProxyTCPConnector
                 # and merges proxy headers into response.headers
                 async with ProxyClientSession() as session:
-                    async with session.get(config.test_url, proxy=config.proxy_url) as response:
+                    # Build proxy_headers for aiohttp if configured
+                    proxy_headers = None
+                    if config.proxy_headers_to_send:
+                        proxy_headers = CIMultiDict(config.proxy_headers_to_send)
+                    
+                    async with session.get(
+                        config.test_url,
+                        proxy=config.proxy_url,
+                        proxy_headers=proxy_headers
+                    ) as response:
                         # The extension merges proxy headers into response.headers
                         header_value = self._check_header(dict(response.headers), config.proxy_header)
                         status = response.status
@@ -309,8 +340,15 @@ class HttpxTest(ModuleTest):
             from python_proxy_headers.httpx_proxy import HTTPProxyTransport
             import httpx
             
-            # Create transport with proxy
-            transport = HTTPProxyTransport(proxy=config.proxy_url)
+            # Build proxy with optional headers
+            proxy_headers_to_send = config.proxy_headers_to_send
+            if proxy_headers_to_send:
+                proxy = httpx.Proxy(url=config.proxy_url, headers=proxy_headers_to_send)
+            else:
+                proxy = config.proxy_url
+            
+            # Create transport with proxy (including headers if configured)
+            transport = HTTPProxyTransport(proxy=proxy)
             
             # Create client with custom transport mounted for both http and https
             with httpx.Client(mounts={'http://': transport, 'https://': transport}) as client:
@@ -400,10 +438,12 @@ def run_tests(test_names: Optional[List[str]] = None, config: Optional[TestConfi
     print(f"\n{'='*60}")
     print("Python Proxy Headers - Test Harness")
     print(f"{'='*60}")
-    print(f"Proxy URL:     {_mask_password(config.proxy_url)}")
-    print(f"Test URL:      {config.test_url}")
-    print(f"Header:        {config.proxy_header}")
-    print(f"Modules:       {', '.join(test_names)}")
+    print(f"Proxy URL:       {_mask_password(config.proxy_url)}")
+    print(f"Test URL:        {config.test_url}")
+    print(f"Check Header:    {config.proxy_header}")
+    if config.send_proxy_header:
+        print(f"Send Header:     {config.send_proxy_header}: {config.send_proxy_value}")
+    print(f"Modules:         {', '.join(test_names)}")
     print(f"{'='*60}\n")
     
     for name in test_names:
