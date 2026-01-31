@@ -14,6 +14,7 @@ We currently provide extensions to the following packages:
 * :doc:`requests <requests>` - Simple HTTP library for Python
 * :doc:`aiohttp <aiohttp>` - Async HTTP client/server framework
 * :doc:`httpx <httpx>` - Modern HTTP client library
+* :doc:`cloudscraper <cloudscraper>` - Cloudflare bypass library
 
 Purpose
 -------
@@ -50,6 +51,7 @@ Contents
    requests
    aiohttp
    httpx
+   cloudscraper
 
 Indices and tables
 ==================
