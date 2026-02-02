@@ -1,27 +1,153 @@
 aiohttp
 =======
 
-The `aiohttp <https://docs.aiohttp.org/en/stable/index.html>`_ library is an async HTTP client/server framework for Python. This page describes how to use aiohttp with proxies and how to interact with proxy headers.
+The `aiohttp <https://docs.aiohttp.org/en/stable/index.html>`_ library is an async HTTP client/server framework for Python. This page describes how to use aiohttp with proxies and how to send and receive custom proxy headers.
+
+Getting Started
+---------------
+
+This section shows you how to quickly get up and running with proxy headers in aiohttp.
+
+**Prerequisites:**
+
+1. Install the packages:
+
+   .. code-block:: bash
+
+      pip install python-proxy-headers aiohttp
+
+2. Import the module:
+
+   .. code-block:: python
+
+      from python_proxy_headers import aiohttp_proxy
+
+**Quick Example - Send and Receive Proxy Headers:**
+
+.. code-block:: python
+
+   import asyncio
+   from python_proxy_headers import aiohttp_proxy
+   
+   async def main():
+       async with aiohttp_proxy.ProxyClientSession() as session:
+           async with session.get(
+               'https://api.ipify.org?format=json',
+               proxy='http://PROXYHOST:PORT',
+               proxy_headers={'X-ProxyMesh-Country': 'US'}
+           ) as response:
+               # Access the response data
+               data = await response.json()
+               print(data)  # {"ip": "..."}
+               
+               # Access proxy response headers
+               print(response.headers.get('X-ProxyMesh-IP'))
+   
+   asyncio.run(main())
+
+That's it! The ``ProxyClientSession`` handles sending your custom headers to the proxy and makes proxy response headers available in the response.
 
 Using Proxies with aiohttp
 ---------------------------
 
 aiohttp provides built-in support for proxies through the ``proxy`` parameter in request methods. You can specify a proxy URL for each request.
 
-Basic Proxy Usage
-~~~~~~~~~~~~~~~~~
+Basic Proxy Usage (Standard aiohttp)
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-To use a proxy with aiohttp, you can pass the ``proxy`` parameter to any request method:
+To use a proxy with standard aiohttp:
 
 .. code-block:: python
 
    import aiohttp
-   async with aiohttp.ClientSession() as session:
-       async with session.get('https://api.ipify.org?format=json', 
-                             proxy="http://PROXYHOST:PORT") as r:
-           text = await r.text()
+   import asyncio
+   
+   async def main():
+       async with aiohttp.ClientSession() as session:
+           async with session.get(
+               'https://api.ipify.org?format=json',
+               proxy='http://PROXYHOST:PORT'
+           ) as response:
+               text = await response.text()
+               print(text)
+   
+   asyncio.run(main())
 
 This routes the request through the specified proxy server.
+
+Proxy Authentication
+~~~~~~~~~~~~~~~~~~~~
+
+To use a proxy that requires authentication:
+
+.. code-block:: python
+
+   import aiohttp
+   import asyncio
+   
+   async def main():
+       async with aiohttp.ClientSession() as session:
+           # Method 1: Include credentials in the URL
+           async with session.get(
+               'https://api.ipify.org?format=json',
+               proxy='http://username:password@PROXYHOST:PORT'
+           ) as response:
+               text = await response.text()
+               
+           # Method 2: Use proxy_auth parameter
+           auth = aiohttp.BasicAuth('username', 'password')
+           async with session.get(
+               'https://api.ipify.org?format=json',
+               proxy='http://PROXYHOST:PORT',
+               proxy_auth=auth
+           ) as response:
+               text = await response.text()
+   
+   asyncio.run(main())
+
+Session-Level Proxy
+~~~~~~~~~~~~~~~~~~~
+
+You can set a default proxy for all requests in a session:
+
+.. code-block:: python
+
+   import aiohttp
+   import asyncio
+   
+   async def main():
+       async with aiohttp.ClientSession(
+           proxy='http://PROXYHOST:PORT',
+           proxy_auth=aiohttp.BasicAuth('user', 'pass')
+       ) as session:
+           # All requests will use this proxy
+           async with session.get('https://api.ipify.org?format=json') as response:
+               text = await response.text()
+   
+   asyncio.run(main())
+
+Environment Variables
+~~~~~~~~~~~~~~~~~~~~~
+
+aiohttp can read proxy settings from environment variables when ``trust_env=True``:
+
+.. code-block:: bash
+
+   export HTTP_PROXY="http://PROXYHOST:PORT"
+   export HTTPS_PROXY="http://PROXYHOST:PORT"
+
+.. code-block:: python
+
+   import aiohttp
+   import asyncio
+   
+   async def main():
+       async with aiohttp.ClientSession(trust_env=True) as session:
+           # Will automatically use proxies from environment variables
+           async with session.get('https://api.ipify.org?format=json') as response:
+               text = await response.text()
+   
+   asyncio.run(main())
 
 Sending Custom Proxy Headers
 -----------------------------
@@ -31,28 +157,45 @@ While it's not documented, aiohttp does support passing in custom proxy headers 
 .. code-block:: python
 
    import aiohttp
-   async with aiohttp.ClientSession() as session:
-       async with session.get('https://api.ipify.org?format=json', 
-                             proxy="http://PROXYHOST:PORT", 
-                             proxy_headers={'X-ProxyMesh-Country': 'US'}) as r:
-           text = await r.text()
+   import asyncio
+   
+   async def main():
+       async with aiohttp.ClientSession() as session:
+           async with session.get(
+               'https://api.ipify.org?format=json',
+               proxy='http://PROXYHOST:PORT',
+               proxy_headers={'X-ProxyMesh-Country': 'US'}
+           ) as response:
+               text = await response.text()
+   
+   asyncio.run(main())
 
 The ``proxy_headers`` parameter allows you to send custom headers to the proxy server. This is useful for controlling proxy behavior, such as selecting a specific country or IP address.
 
 Receiving Proxy Response Headers
 ---------------------------------
 
-However, if you want to get proxy response headers, you should use our extension module ``python_proxy_headers.aiohttp_proxy``:
+Standard aiohttp does not expose proxy response headers from the CONNECT request. To get proxy response headers, use our extension module ``python_proxy_headers.aiohttp_proxy``:
 
 .. code-block:: python
 
+   import asyncio
    from python_proxy_headers import aiohttp_proxy
-   async with aiohttp_proxy.ProxyClientSession() as session:
-       async with session.get('https://api.ipify.org?format=json', 
-                             proxy="http://PROXYHOST:PORT", 
-                             proxy_headers={'X-ProxyMesh-Country': 'US'}) as r:
-           text = await r.text()
-           proxy_ip = r.headers['X-ProxyMesh-IP']
+   
+   async def main():
+       async with aiohttp_proxy.ProxyClientSession() as session:
+           async with session.get(
+               'https://api.ipify.org?format=json',
+               proxy='http://PROXYHOST:PORT',
+               proxy_headers={'X-ProxyMesh-Country': 'US'}
+           ) as response:
+               data = await response.json()
+               
+               # Proxy response headers are now available
+               proxy_ip = response.headers.get('X-ProxyMesh-IP')
+               print(f"Request was made through: {proxy_ip}")
+   
+   asyncio.run(main())
 
 The ``ProxyClientSession`` extends the standard ``ClientSession`` to make proxy response headers available in the response headers. This allows you to access information from the proxy server, such as the IP address that was assigned to your request.
 
@@ -68,11 +211,13 @@ Here's a complete example showing how to use aiohttp with proxy headers:
    
    async def main():
        async with aiohttp_proxy.ProxyClientSession() as session:
-           async with session.get('https://api.ipify.org?format=json', 
-                                 proxy="http://PROXYHOST:PORT", 
-                                 proxy_headers={'X-ProxyMesh-Country': 'US'}) as r:
-               data = await r.json()
-               proxy_ip = r.headers.get('X-ProxyMesh-IP')
+           async with session.get(
+               'https://api.ipify.org?format=json',
+               proxy='http://PROXYHOST:PORT',
+               proxy_headers={'X-ProxyMesh-Country': 'US'}
+           ) as response:
+               data = await response.json()
+               proxy_ip = response.headers.get('X-ProxyMesh-IP')
                print(f"Your IP: {data['ip']}")
                print(f"Proxy IP: {proxy_ip}")
    
@@ -116,7 +261,7 @@ The main entry point for using proxy headers with aiohttp. This class extends ``
    from python_proxy_headers.aiohttp_proxy import ProxyClientSession
    
    async with ProxyClientSession() as session:
-       async with session.get('https://example.com', proxy="http://PROXYHOST:PORT") as r:
+       async with session.get('https://example.com', proxy='http://PROXYHOST:PORT') as r:
            proxy_ip = r.headers.get('X-ProxyMesh-IP')
 
 The ``ProxyClientSession`` constructor accepts all the same arguments as ``aiohttp.ClientSession``, and automatically sets:
@@ -172,4 +317,3 @@ The extension classes work together in the following flow:
 4. **ProxyClientResponse** merges the proxy headers into the response's ``headers`` property
 
 This allows proxy response headers to be transparently available in your application without any special handling.
-
