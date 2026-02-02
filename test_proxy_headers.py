@@ -16,7 +16,7 @@ Configuration via environment variables:
     SEND_PROXY_VALUE      - Header value to send to proxy (optional)
 
 Usage:
-    python test_proxy_headers.py [module1] [module2] ...
+    python test_proxy_headers.py [-v] [module1] [module2] ...
     
     # Test all modules
     python test_proxy_headers.py
@@ -24,11 +24,19 @@ Usage:
     # Test specific modules
     python test_proxy_headers.py requests httpx
     
+    # Verbose mode - show header values
+    python test_proxy_headers.py -v
+    
     # With custom response header to check
     PROXY_HEADER=X-Custom-Header python test_proxy_headers.py
     
     # Send a custom header to the proxy
     SEND_PROXY_HEADER=X-ProxyMesh-Country SEND_PROXY_VALUE=US python test_proxy_headers.py
+
+Options:
+    -v, --verbose    Show proxy header values in results
+    -l, --list       List available modules
+    -h, --help       Show this help message
 
 Exit codes:
     0 - All tests passed
@@ -101,11 +109,18 @@ class TestResult:
     error: Optional[str] = None
     response_status: Optional[int] = None
     
-    def __str__(self) -> str:
+    def format(self, verbose: bool = False) -> str:
+        """Format the result for display."""
         if self.success:
-            return f"[PASS] {self.module_name}: {self.header_value}"
+            if verbose and self.header_value:
+                return f"[PASS] {self.module_name}: {self.header_value}"
+            else:
+                return f"[PASS] {self.module_name}"
         else:
             return f"[FAIL] {self.module_name}: {self.error}"
+    
+    def __str__(self) -> str:
+        return self.format(verbose=False)
 
 
 # =============================================================================
@@ -473,12 +488,13 @@ def _mask_password(url: str) -> str:
     return url
 
 
-def print_results(results: List[TestResult]) -> bool:
+def print_results(results: List[TestResult], verbose: bool = False) -> bool:
     """
     Print test results summary.
     
     Args:
         results: List of test results
+        verbose: If True, show header values in results
         
     Returns:
         True if all tests passed, False otherwise
@@ -491,7 +507,7 @@ def print_results(results: List[TestResult]) -> bool:
     failed = 0
     
     for result in results:
-        print(result)
+        print(result.format(verbose=verbose))
         if result.success:
             passed += 1
         else:
@@ -511,20 +527,32 @@ def print_results(results: List[TestResult]) -> bool:
 def main():
     """Main entry point."""
     # Parse command line arguments
-    test_names = sys.argv[1:] if len(sys.argv) > 1 else None
+    args = sys.argv[1:] if len(sys.argv) > 1 else []
+    
+    # Check for verbose flag
+    verbose = False
+    if '-v' in args:
+        verbose = True
+        args.remove('-v')
+    if '--verbose' in args:
+        verbose = True
+        args.remove('--verbose')
     
     # Handle --help
-    if test_names and test_names[0] in ['--help', '-h']:
+    if '--help' in args or '-h' in args:
         print(__doc__)
         print(f"\nAvailable modules: {', '.join(list_available_tests())}")
         sys.exit(0)
     
     # Handle --list
-    if test_names and test_names[0] in ['--list', '-l']:
+    if '--list' in args or '-l' in args:
         print("Available modules:")
         for name in list_available_tests():
             print(f"  - {name}")
         sys.exit(0)
+    
+    # Remaining args are module names
+    test_names = args if args else None
     
     try:
         config = TestConfig.from_env()
@@ -538,7 +566,7 @@ def main():
     
     try:
         results = run_tests(test_names, config)
-        all_passed = print_results(results)
+        all_passed = print_results(results, verbose=verbose)
         sys.exit(0 if all_passed else 1)
     except KeyboardInterrupt:
         print("\nInterrupted.")
