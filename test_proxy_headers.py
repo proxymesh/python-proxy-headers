@@ -454,6 +454,68 @@ class PycurlTest(ModuleTest):
 
 
 # =============================================================================
+# autoscraper Test
+# =============================================================================
+
+class AutoscraperTest(ModuleTest):
+    """Test for autoscraper extension."""
+    
+    name = "autoscraper"
+    
+    def test(self, config: TestConfig) -> TestResult:
+        try:
+            from python_proxy_headers.autoscraper_proxy import ProxyAutoScraper
+            
+            # Create scraper with optional proxy headers to send
+            scraper = ProxyAutoScraper(proxy_headers=config.proxy_headers_to_send or None)
+            
+            # Access the underlying ProxySession to test proxy headers
+            # (AutoScraper itself doesn't expose response headers)
+            session = scraper._get_session()
+            session.proxies = {
+                'http': config.proxy_url,
+                'https': config.proxy_url
+            }
+            
+            # Make request using the session directly
+            response = session.get(config.test_url)
+            
+            # Check for proxy header in response
+            header_value = self._check_header(dict(response.headers), config.proxy_header)
+            
+            # Clean up
+            scraper.close()
+            
+            if header_value:
+                return TestResult(
+                    module_name=self.name,
+                    success=True,
+                    header_value=header_value,
+                    response_status=response.status_code
+                )
+            else:
+                return TestResult(
+                    module_name=self.name,
+                    success=False,
+                    error=f"Header '{config.proxy_header}' not found in response",
+                    response_status=response.status_code
+                )
+                    
+        except ImportError as e:
+            return TestResult(
+                module_name=self.name,
+                success=False,
+                error=f"Import error: {e}"
+            )
+        except Exception as e:
+            return TestResult(
+                module_name=self.name,
+                success=False,
+                error=f"{type(e).__name__}: {e}"
+            )
+
+
+# =============================================================================
 # Test Registry
 # =============================================================================
 
@@ -464,6 +526,7 @@ AVAILABLE_TESTS: Dict[str, Type[ModuleTest]] = {
     'aiohttp': AiohttpTest,
     'httpx': HttpxTest,
     'pycurl': PycurlTest,
+    'autoscraper': AutoscraperTest,
 }
 
 

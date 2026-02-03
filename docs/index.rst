@@ -15,6 +15,7 @@ We currently provide extensions to the following packages:
 * :doc:`aiohttp <aiohttp>` - Async HTTP client/server framework
 * :doc:`httpx <httpx>` - Modern HTTP client library
 * :doc:`pycurl <pycurl>` - Python interface to libcurl
+* :doc:`autoscraper <autoscraper>` - Smart automatic web scraper
 
 Purpose
 -------
@@ -52,6 +53,7 @@ Contents
    aiohttp
    httpx
    pycurl
+   autoscraper
 
 Indices and tables
 ==================
