@@ -456,6 +456,61 @@ class PycurlTest(ModuleTest):
 
 
 # =============================================================================
+# cloudscraper Test
+# =============================================================================
+
+class CloudscraperTest(ModuleTest):
+    """Test for cloudscraper extension."""
+    
+    name = "cloudscraper"
+    
+    def test(self, config: TestConfig) -> TestResult:
+        try:
+            from python_proxy_headers.cloudscraper_proxy import create_scraper
+            
+            # Create scraper with optional proxy headers to send
+            scraper = create_scraper(proxy_headers=config.proxy_headers_to_send or None)
+            scraper.proxies = {
+                'http': config.proxy_url,
+                'https': config.proxy_url
+            }
+            
+            # Make request
+            response = scraper.get(config.test_url)
+            
+            # Check for proxy header in response
+            header_value = self._check_header(dict(response.headers), config.proxy_header)
+            
+            if header_value:
+                return TestResult(
+                    module_name=self.name,
+                    success=True,
+                    header_value=header_value,
+                    response_status=response.status_code
+                )
+            else:
+                return TestResult(
+                    module_name=self.name,
+                    success=False,
+                    error=f"Header '{config.proxy_header}' not found in response",
+                    response_status=response.status_code
+                )
+                    
+        except ImportError as e:
+            return TestResult(
+                module_name=self.name,
+                success=False,
+                error=f"Import error: {e}"
+            )
+        except Exception as e:
+            return TestResult(
+                module_name=self.name,
+                success=False,
+                error=f"{type(e).__name__}: {e}"
+            )
+
+
+# =============================================================================
 # autoscraper Test
 # =============================================================================
 
@@ -528,6 +583,7 @@ AVAILABLE_TESTS: Dict[str, Type[ModuleTest]] = {
     'aiohttp': AiohttpTest,
     'httpx': HttpxTest,
     'pycurl': PycurlTest,
+    'cloudscraper': CloudscraperTest,
     'autoscraper': AutoscraperTest,
 }
 
