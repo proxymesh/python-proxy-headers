@@ -412,32 +412,34 @@ class PycurlTest(ModuleTest):
     
     def test(self, config: TestConfig) -> TestResult:
         try:
-            from python_proxy_headers.pycurl_proxy import ProxyCurl
+            from python_proxy_headers.pycurl_proxy import get
             
-            # Create ProxyCurl with optional proxy headers to send
-            with ProxyCurl(proxy_headers=config.proxy_headers_to_send or None) as curl:
-                # Make request through proxy
-                response = curl.get(config.test_url, proxy=config.proxy_url)
-                
-                # Check for proxy header in response headers (merged) or proxy_headers
-                header_value = self._check_header(response.headers, config.proxy_header)
-                if not header_value:
-                    header_value = self._check_header(response.proxy_headers, config.proxy_header)
-                
-                if header_value:
-                    return TestResult(
-                        module_name=self.name,
-                        success=True,
-                        header_value=header_value,
-                        response_status=response.status_code
-                    )
-                else:
-                    return TestResult(
-                        module_name=self.name,
-                        success=False,
-                        error=f"Header '{config.proxy_header}' not found in response",
-                        response_status=response.status_code
-                    )
+            # Make request using high-level API
+            response = get(
+                config.test_url,
+                proxy=config.proxy_url,
+                proxy_headers=config.proxy_headers_to_send or None
+            )
+            
+            # Check for proxy header in response headers or proxy_headers
+            header_value = self._check_header(response.headers, config.proxy_header)
+            if not header_value:
+                header_value = self._check_header(response.proxy_headers, config.proxy_header)
+            
+            if header_value:
+                return TestResult(
+                    module_name=self.name,
+                    success=True,
+                    header_value=header_value,
+                    response_status=response.status_code
+                )
+            else:
+                return TestResult(
+                    module_name=self.name,
+                    success=False,
+                    error=f"Header '{config.proxy_header}' not found in response",
+                    response_status=response.status_code
+                )
                     
         except ImportError as e:
             return TestResult(
