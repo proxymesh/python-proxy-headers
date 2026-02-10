@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "python-proxy-headers"
-version = "0.2.0"
+version = "0.2.1"
 authors = [
   { name="ProxyMesh", email="support@proxymesh.com" },
 ]
@@ -14,7 +14,7 @@ requires-python = ">=3.8"
 classifiers = [
   "Programming Language :: Python :: 3",
   "Operating System :: OS Independent",
-	"License :: OSI Approved :: BSD License",
+	"License :: OSI Approved :: MIT License",
 	"Intended Audience :: Developers",
 	"Topic :: Internet :: WWW/HTTP",
   "Topic :: Software Development :: Libraries :: Python Modules",
