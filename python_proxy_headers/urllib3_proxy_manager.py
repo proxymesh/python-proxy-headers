@@ -3,6 +3,8 @@ from http.client import _read_headers
 from urllib3.connection import HTTPSConnection
 from urllib3.connectionpool import HTTPConnectionPool, HTTPSConnectionPool
 from urllib3.poolmanager import ProxyManager
+from urllib3.util.request import make_headers
+from urllib3.util.url import parse_url
 
 if sys.version_info < (3, 12, 0):
 	#####################################
@@ -128,6 +130,22 @@ class HTTPSProxyConnectionPool(HTTPSConnectionPool):
 
 class ProxyHeaderManager(ProxyManager):
 	def __init__(self, *args, **kwargs):
+		# urllib3.ProxyManager does not add Proxy-Authorization from user:pass in the
+		# proxy URL; requests does via HTTPAdapter.proxy_headers(). Merge URL auth here
+		# so direct proxy_from_url() matches requests and authenticates CONNECT.
+		proxy_url = kwargs.get("proxy_url")
+		if proxy_url is None and args:
+			proxy_url = args[0]
+		proxy_headers = kwargs.get("proxy_headers")
+		merged = dict(proxy_headers or {})
+		if isinstance(proxy_url, str):
+			parsed = parse_url(proxy_url)
+			if parsed.auth and not any(
+				k.lower() == "proxy-authorization" for k in merged
+			):
+				merged.update(make_headers(proxy_basic_auth=parsed.auth))
+		if merged != dict(proxy_headers or {}):
+			kwargs["proxy_headers"] = merged
 		super().__init__(*args, **kwargs)
 		self.pool_classes_by_scheme = {"http": HTTPConnectionPool, "https": HTTPSProxyConnectionPool}
 
