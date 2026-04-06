@@ -8,32 +8,79 @@ on:
   workflow_dispatch:
     inputs:
       test_pypi:
-        description: 'Publish to TestPyPI instead of PyPI'
+        description: "Publish to TestPyPI instead of PyPI"
         required: false
         default: false
         type: boolean
 
+  # GitHub does not start new workflow runs for events caused by the default
+  # GITHUB_TOKEN (e.g. gh release create in another workflow). After
+  # "Release on merge" creates a release, trigger publish here instead.
+  workflow_run:
+    workflows: [Release on merge]
+    types: [completed]
+
+permissions:
+  contents: read
+  id-token: write
+
 jobs:
-  build:
-    name: Build distribution
+  gate:
     runs-on: ubuntu-latest
-    
+    outputs:
+      publish: ${{ steps.decide.outputs.publish }}
     steps:
       - uses: actions/checkout@v4
-      
+        if: github.event_name == 'workflow_run'
+        with:
+          ref: main
+
+      - id: decide
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [[ "${{ github.event_name }}" != "workflow_run" ]]; then
+            echo "publish=true" >> "${GITHUB_OUTPUT}"
+            exit 0
+          fi
+          if [[ "${{ github.event.workflow_run.conclusion }}" != "success" ]]; then
+            echo "publish=false" >> "${GITHUB_OUTPUT}"
+            exit 0
+          fi
+          VERSION="$(grep -m1 '^version = ' pyproject.toml | cut -d'"' -f2)"
+          TAG="v${VERSION}"
+          if gh release view "${TAG}" --repo "${{ github.repository }}" >/dev/null 2>&1; then
+            echo "publish=true" >> "${GITHUB_OUTPUT}"
+          else
+            echo "No GitHub release ${TAG} yet (or release job was skipped); skipping publish."
+            echo "publish=false" >> "${GITHUB_OUTPUT}"
+          fi
+
+  build:
+    name: Build distribution
+    needs: gate
+    if: needs.gate.outputs.publish == 'true'
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event_name == 'workflow_run' && 'main' || github.event_name == 'release' && github.ref || 'main' }}
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.x'
-      
+          python-version: "3.x"
+
       - name: Install build dependencies
         run: |
           python -m pip install --upgrade pip
           pip install build
-      
+
       - name: Build package
         run: python -m build
-      
+
       - name: Store distribution packages
         uses: actions/upload-artifact@v4
         with:
@@ -42,24 +89,24 @@ jobs:
 
   publish-to-pypi:
     name: Publish to PyPI
-    if: github.event_name == 'release' || (github.event_name == 'workflow_dispatch' && inputs.test_pypi == false)
+    if: >-
+      github.event_name == 'workflow_run' ||
+      github.event_name == 'release' ||
+      (github.event_name == 'workflow_dispatch' && inputs.test_pypi == false)
     needs: build
     runs-on: ubuntu-latest
-    
+
     environment:
       name: pypi
       url: https://pypi.org/p/python-proxy-headers
-    
-    permissions:
-      id-token: write  # Required for trusted publishing
-    
+
     steps:
       - name: Download distribution packages
         uses: actions/download-artifact@v4
         with:
           name: python-package-distributions
           path: dist/
-      
+
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1
 
@@ -68,21 +115,18 @@ jobs:
     if: github.event_name == 'workflow_dispatch' && inputs.test_pypi == true
     needs: build
     runs-on: ubuntu-latest
-    
+
     environment:
       name: testpypi
       url: https://test.pypi.org/p/python-proxy-headers
-    
-    permissions:
-      id-token: write
-    
+
     steps:
       - name: Download distribution packages
         uses: actions/download-artifact@v4
         with:
           name: python-package-distributions
           path: dist/
-      
+
       - name: Publish to TestPyPI
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
