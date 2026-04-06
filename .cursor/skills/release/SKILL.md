@@ -80,7 +80,7 @@ git config user.name "Cursor"
 
 ## After merge
 
-Merging the PR into `main` triggers `.github/workflows/github_release_on_release_branch_merge.yml`, which creates a **GitHub Release** for tag `v{version}` from the merge commit. That **published** release event runs the existing PyPI **publish** workflow.
+Merging the PR into `main` runs **Release on merge** (`.github/workflows/github_release_on_release_branch_merge.yml`), which creates a **GitHub Release** for tag `v{version}` from the merge commit. Because releases created with the default `GITHUB_TOKEN` do not trigger other workflows, **Publish to PyPI** (`publish.yml`) is also started via **`workflow_run`** when that release workflow finishes. Manual or API-created releases still match the `release: published` trigger on `publish.yml`.
 
 ## Quick reference
 

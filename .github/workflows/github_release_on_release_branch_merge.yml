@@ -1,7 +1,8 @@
-# When a PR from release/* is merged into main, create a GitHub Release (tag vX.Y.Z).
-# The existing publish.yml workflow runs on release: published and uploads to PyPI.
+# When a release/* PR merges into main, create a GitHub release (tag vX.Y.Z).
+# Events from GITHUB_TOKEN do not start other workflows; publish.yml is triggered via
+# workflow_run when this workflow completes (see publish.yml).
 
-name: GitHub Release on release branch merge
+name: Release on merge
 
 on:
   pull_request:
@@ -9,12 +10,19 @@ on:
     branches:
       - main
 
+concurrency:
+  group: release-on-merge-${{ github.event.pull_request.number }}
+  cancel-in-progress: false
+
 permissions:
   contents: write
 
 jobs:
-  create-release:
-    if: github.event.pull_request.merged == true && startsWith(github.head_ref, 'release/')
+  github-release:
+    if: >-
+      github.event.pull_request.merged == true &&
+      startsWith(github.head_ref, 'release/') &&
+      github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
     steps:
       - name: Checkout merge commit
