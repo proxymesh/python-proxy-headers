@@ -70,13 +70,13 @@ git config user.name "Cursor"
      --body "Bumps the package version to ${NEW_VERSION} for release."
    ```
 
-7. **Enable auto-merge** after the PR exists (merge method: repository default—omit `--merge` / `--squash` / `--rebase` unless the user specified one).
+7. **Enable auto-merge** after the PR exists. In non-interactive mode, `gh` requires an explicit merge strategy with `--auto` (use the repository default: usually **`--merge`** for a merge commit, or **`--squash`** / **`--rebase`** if that is what the repo uses).
 
    ```bash
-   gh pr merge <PR_NUMBER_OR_URL> --auto
+   gh pr merge <PR_NUMBER_OR_URL> --auto --merge
    ```
 
-   If `--auto` fails (permissions, auto-merge disabled, or pending checks), leave the PR open and report the error; the user can merge manually after CI passes. You can poll with `gh pr checks <PR_NUMBER_OR_URL> --watch` then retry `gh pr merge ... --auto`, or merge manually.
+   If `--auto` fails (permissions, auto-merge disabled, or pending checks), leave the PR open and report the error; the user can merge manually after CI passes. You can poll with `gh pr checks <PR_NUMBER_OR_URL> --watch` then retry `gh pr merge ... --auto --merge`, or merge manually.
 
 ## After merge
 
