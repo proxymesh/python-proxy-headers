@@ -38,6 +38,8 @@ from io import BytesIO
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Tuple
 
+from .header_utils import validate_headers
+
 try:
     import pycurl
 except ImportError:
@@ -67,7 +69,8 @@ def set_proxy_headers(curl, headers: Dict[str, str]) -> None:
     """
     if not headers:
         return
-    
+
+    headers = validate_headers(headers)
     header_list = [f"{k}: {v}" for k, v in headers.items()]
     
     # Set CURLOPT_PROXYHEADER

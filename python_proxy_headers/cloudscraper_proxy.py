@@ -27,6 +27,7 @@ except ImportError:
         "Install it with: pip install cloudscraper"
     )
 
+from .header_utils import validate_headers
 from .urllib3_proxy_manager import proxy_from_url
 
 
@@ -41,8 +42,13 @@ class CipherSuiteProxyHeaderAdapter(CipherSuiteAdapter):
     """
     
     def __init__(self, proxy_headers: Optional[Dict[str, str]] = None, **kwargs):
-        self._proxy_headers = proxy_headers or {}
+        self._proxy_headers = validate_headers(proxy_headers)
         super().__init__(**kwargs)
+
+    def build_response(self, req, resp):
+        response = super().build_response(req, resp)
+        response.proxy_headers = getattr(resp, "proxy_headers", {}) or {}
+        return response
     
     def proxy_manager_for(self, proxy, **proxy_kwargs):
         """
@@ -103,7 +109,7 @@ class ProxyCloudScraper(cloudscraper.CloudScraper):
     """
     
     def __init__(self, proxy_headers: Optional[Dict[str, str]] = None, **kwargs):
-        self._proxy_headers = proxy_headers or {}
+        self._proxy_headers = validate_headers(proxy_headers)
         
         # Call parent init
         super().__init__(**kwargs)
@@ -142,7 +148,7 @@ class ProxyCloudScraper(cloudscraper.CloudScraper):
         Args:
             proxy_headers: New proxy headers to use
         """
-        self._proxy_headers = proxy_headers
+        self._proxy_headers = validate_headers(proxy_headers)
         
         # Remount adapters with new headers
         self.mount(

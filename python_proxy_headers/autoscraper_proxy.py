@@ -35,6 +35,7 @@ except ImportError:
         "Install it with: pip install autoscraper"
     )
 
+from .header_utils import validate_headers
 from .requests_adapter import ProxySession
 
 
@@ -71,7 +72,7 @@ class ProxyAutoScraper(AutoScraper):
         stack_list: Optional[List] = None
     ):
         super().__init__(stack_list=stack_list)
-        self._proxy_headers = proxy_headers or {}
+        self._proxy_headers = validate_headers(proxy_headers)
         self._session: Optional[ProxySession] = None
     
     def _get_session(self) -> ProxySession:
@@ -90,7 +91,7 @@ class ProxyAutoScraper(AutoScraper):
         Args:
             proxy_headers: New proxy headers to use
         """
-        self._proxy_headers = proxy_headers
+        self._proxy_headers = validate_headers(proxy_headers)
         if self._session is not None:
             self._session.close()
             self._session = None
