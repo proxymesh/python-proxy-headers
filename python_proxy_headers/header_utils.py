@@ -1,8 +1,9 @@
 """Validation and safe merging for proxy CONNECT headers.
 
 CONNECT requests are raw HTTP and must not interpolate CR, LF, or NUL.
-CONNECT response headers are not origin HTTPS headers and must not overwrite
-them; only X-ProxyMesh-* values are copied onto the origin response.
+CONNECT response headers are not origin HTTPS headers: hop-by-hop and
+security-sensitive names are not copied onto the origin response, and
+existing origin headers are never overwritten.
 """
 
 from __future__ import annotations
@@ -10,9 +11,6 @@ from __future__ import annotations
 from typing import Any, Dict, List, Mapping, MutableMapping, Optional, Sequence, Tuple, Union
 
 RawHeaders = Union[Mapping[Any, Any], Sequence[Tuple[Any, Any]], None]
-
-# ProxyMesh response headers that callers read from response.headers.
-SAFE_PROXY_HEADER_PREFIX = "x-proxymesh-"
 
 # Never copy these from a CONNECT response onto the origin response.
 BLOCKED_PROXY_RESPONSE_HEADERS = frozenset({
@@ -40,8 +38,10 @@ BLOCKED_PROXY_RESPONSE_HEADERS = frozenset({
 	"link",
 	"location",
 	"pragma",
+	"proxy-agent",
 	"proxy-authenticate",
 	"proxy-authorization",
+	"proxy-connection",
 	"refresh",
 	"server",
 	"set-cookie",
@@ -128,7 +128,7 @@ def is_mergeable_proxy_header(name: Any) -> bool:
 		return False
 	if lowered.startswith("access-control-"):
 		return False
-	return lowered.startswith(SAFE_PROXY_HEADER_PREFIX)
+	return True
 
 
 def snapshot_headers(headers: RawHeaders) -> Dict[str, str]:
@@ -143,7 +143,7 @@ def merge_proxy_response_headers(
 	origin_headers: MutableMapping[Any, Any],
 	proxy_headers: RawHeaders,
 ) -> None:
-	"""Copy allowlisted CONNECT headers onto origin headers without overwriting."""
+	"""Copy safe CONNECT headers onto origin headers without overwriting."""
 	for name, value in _header_items(proxy_headers):
 		name_s = _as_str(name)
 		if not is_mergeable_proxy_header(name_s):

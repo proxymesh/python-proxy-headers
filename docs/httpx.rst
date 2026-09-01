@@ -375,7 +375,7 @@ The extension classes work by intercepting the CONNECT request/response cycle du
 
 2. **CONNECT Response**: The proxy responds with a CONNECT response (status 200) that may include proxy information headers in the response (e.g., ``X-ProxyMesh-IP: 192.168.1.1``)
 
-3. **Header Merging**: Allowlisted ``X-ProxyMesh-*`` CONNECT headers are stored and later merged into the origin response with ``merge_headers()``. Origin headers are never overwritten, and headers such as ``Set-Cookie`` or ``Location`` from CONNECT are not copied.
+3. **Header Merging**: Safe CONNECT headers are stored and later merged into the origin response with ``merge_headers()``. Origin headers are never overwritten, and hop-by-hop or security-sensitive names such as ``Set-Cookie`` or ``Location`` from CONNECT are not copied.
 
 4. **Access**: Your application can then access both the target server's response headers and the proxy's response headers from the same response object
 

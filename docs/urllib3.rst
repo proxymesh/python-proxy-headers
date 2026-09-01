@@ -45,7 +45,7 @@ This section shows you how to quickly get up and running with proxy headers in u
 
 That's it! The ``ProxyHeaderManager`` handles sending your custom headers to the proxy and makes proxy response headers available in the response.
 
-Only ``X-ProxyMesh-*`` CONNECT response headers are copied onto ``response.headers``, and they never overwrite a header already sent by the origin. The full CONNECT header set is on ``response.proxy_headers``.
+CONNECT response headers are copied onto ``response.headers`` except hop-by-hop and security-sensitive names (``Set-Cookie``, ``Location``, ``Content-Type``, and similar). Existing origin headers are never overwritten. The full CONNECT set is on ``response.proxy_headers``.
 
 Using Proxies with urllib3
 --------------------------

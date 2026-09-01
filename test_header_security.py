@@ -75,16 +75,16 @@ class ValidateHeadersTests(unittest.TestCase):
 
 
 class MergeProxyHeadersTests(unittest.TestCase):
-    def test_merges_proxymesh_header(self) -> None:
+    def test_merges_custom_proxy_header(self) -> None:
         origin = {"Content-Type": "text/plain"}
-        merge_proxy_response_headers(origin, {"X-ProxyMesh-IP": "203.0.113.10"})
-        self.assertEqual(origin["X-ProxyMesh-IP"], "203.0.113.10")
+        merge_proxy_response_headers(origin, {"X-Custom-Exit-IP": "203.0.113.10"})
+        self.assertEqual(origin["X-Custom-Exit-IP"], "203.0.113.10")
         self.assertEqual(origin["Content-Type"], "text/plain")
 
     def test_does_not_overwrite_origin(self) -> None:
-        origin = {"X-ProxyMesh-IP": "origin-value"}
-        merge_proxy_response_headers(origin, {"X-ProxyMesh-IP": "proxy-value"})
-        self.assertEqual(origin["X-ProxyMesh-IP"], "origin-value")
+        origin = {"X-Custom-Exit-IP": "origin-value"}
+        merge_proxy_response_headers(origin, {"X-Custom-Exit-IP": "proxy-value"})
+        self.assertEqual(origin["X-Custom-Exit-IP"], "origin-value")
 
     def test_blocks_set_cookie_and_location(self) -> None:
         origin = {"Content-Type": "text/plain"}
@@ -94,24 +94,31 @@ class MergeProxyHeadersTests(unittest.TestCase):
                 "Set-Cookie": "session=attacker",
                 "Location": "https://evil.example/",
                 "Content-Type": "text/html",
-                "X-Origin": "spoofed",
+                "Proxy-Connection": "Keep-Alive",
+                "X-Custom-Exit-IP": "203.0.113.10",
             },
         )
-        self.assertEqual(origin, {"Content-Type": "text/plain"})
+        self.assertEqual(origin["Content-Type"], "text/plain")
+        self.assertNotIn("Set-Cookie", origin)
+        self.assertNotIn("Location", origin)
+        self.assertNotIn("Proxy-Connection", origin)
+        self.assertEqual(origin["X-Custom-Exit-IP"], "203.0.113.10")
 
-    def test_is_mergeable_only_proxymesh(self) -> None:
+    def test_is_mergeable_skips_sensitive_headers(self) -> None:
+        self.assertTrue(is_mergeable_proxy_header("X-Custom-Exit-IP"))
         self.assertTrue(is_mergeable_proxy_header("X-ProxyMesh-IP"))
         self.assertFalse(is_mergeable_proxy_header("Set-Cookie"))
-        self.assertFalse(is_mergeable_proxy_header("X-Origin"))
+        self.assertFalse(is_mergeable_proxy_header("Location"))
+        self.assertFalse(is_mergeable_proxy_header("Proxy-Connection"))
 
     def test_filter_connect_headers_preserves_bytes(self) -> None:
         origin = [(b"content-type", b"text/plain")]
         connect = [
             (b"set-cookie", b"session=attacker"),
-            (b"x-proxymesh-ip", b"203.0.113.10"),
+            (b"x-custom-exit-ip", b"203.0.113.10"),
         ]
         extra = filter_connect_headers(origin, connect)
-        self.assertEqual(extra, [(b"x-proxymesh-ip", b"203.0.113.10")])
+        self.assertEqual(extra, [(b"x-custom-exit-ip", b"203.0.113.10")])
 
 
 class _LocalHttpsProxy:
@@ -272,7 +279,7 @@ class ConnectMergeIntegrationTests(unittest.TestCase):
             b"Location: https://evil.example/\r\n"
             b"Content-Type: text/html\r\n"
             b"X-Origin: spoofed\r\n"
-            b"X-ProxyMesh-IP: 203.0.113.10\r\n"
+            b"X-Custom-Exit-IP: 203.0.113.10\r\n"
         )
         helper.start()
         try:
@@ -288,11 +295,11 @@ class ConnectMergeIntegrationTests(unittest.TestCase):
             self.assertEqual(response.headers.get("X-Origin"), "real")
             self.assertNotEqual(response.headers.get("Location"), "https://evil.example/")
             self.assertNotIn("session=attacker", response.headers.get("Set-Cookie", ""))
-            self.assertEqual(response.headers.get("X-ProxyMesh-IP"), "203.0.113.10")
+            self.assertEqual(response.headers.get("X-Custom-Exit-IP"), "203.0.113.10")
             self.assertEqual(response.cookies.get("origin"), "safe")
             self.assertNotIn("session", response.cookies)
             proxy_headers = {k.lower(): v for k, v in (response.proxy_headers or {}).items()}
-            self.assertEqual(proxy_headers.get("x-proxymesh-ip"), "203.0.113.10")
+            self.assertEqual(proxy_headers.get("x-custom-exit-ip"), "203.0.113.10")
             self.assertEqual(proxy_headers.get("set-cookie"), "session=attacker")
         finally:
             helper.close()

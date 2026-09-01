@@ -284,7 +284,7 @@ When establishing an HTTPS connection through a proxy, the connector:
 * Creates a CONNECT request to the proxy server
 * Includes any custom proxy headers you've specified
 * Captures the proxy's response headers (e.g., ``X-ProxyMesh-IP``)
-* Stores them so allowlisted ``X-ProxyMesh-*`` values can be merged into the final response without overwriting origin headers. The full CONNECT set is on ``response.proxy_headers``.
+* Stores them so safe CONNECT values can be merged into the final response without overwriting origin headers. Hop-by-hop and security-sensitive names are omitted. The full CONNECT set is on ``response.proxy_headers``.
 
 You typically don't need to use this class directly - it's automatically configured when using ``ProxyClientSession``.
 

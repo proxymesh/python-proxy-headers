@@ -93,7 +93,7 @@ class ProxyTunnelHTTPConnection(TunnelHTTPConnection):
 
 				self._connect_response_headers = connect_response.headers
 				self._connected = True
-		# Merge allowlisted CONNECT headers without overwriting origin values
+		# Merge safe CONNECT headers without overwriting origin values
 		response = self._connection.handle_request(request)
 		response.headers = merge_headers(
 			response.headers,
@@ -183,7 +183,7 @@ class AsyncProxyTunnelHTTPConnection(AsyncTunnelHTTPConnection):
 
 				self._connect_response_headers = connect_response.headers
 				self._connected = True
-		# Merge allowlisted CONNECT headers without overwriting origin values
+		# Merge safe CONNECT headers without overwriting origin values
 		response = await self._connection.handle_async_request(request)
 		response.headers = merge_headers(
 			response.headers,
