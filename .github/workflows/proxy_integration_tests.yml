@@ -15,12 +15,12 @@ jobs:
   unit:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
       - name: Set up Python
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.x"
 
@@ -40,12 +40,12 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
       - name: Set up Python
-        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97
+        uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7.0.0
         with:
           python-version: "3.x"
 
@@ -59,26 +59,15 @@ jobs:
           pip install urllib3 requests aiohttp httpx cloudscraper autoscraper pycurl
 
       - name: Require PROXY_URL Actions secret
-        id: proxy_url
         env:
           PROXY_URL: ${{ secrets.PROXY_URL }}
         run: |
-          if [ -n "${PROXY_URL}" ]; then
-            echo "available=true" >> "$GITHUB_OUTPUT"
-            exit 0
+          if [ -z "${PROXY_URL}" ]; then
+            echo "::error::PROXY_URL is not set. Add a repository (or environment) secret named PROXY_URL under Settings → Secrets and variables → Actions."
+            exit 1
           fi
-          # Dependabot PRs do not receive repository Actions secrets unless the same
-          # values are also configured under Settings → Secrets → Dependabot.
-          if [ "${{ github.actor }}" = "dependabot[bot]" ]; then
-            echo "::notice::Skipping integration tests: PROXY_URL is not available to Dependabot. Add it under Settings → Secrets → Dependabot to run these checks on Dependabot PRs."
-            echo "available=false" >> "$GITHUB_OUTPUT"
-            exit 0
-          fi
-          echo "::error::PROXY_URL is not set. Add a repository (or environment) secret named PROXY_URL under Settings → Secrets and variables → Actions."
-          exit 1
 
       - name: Run integration tests
-        if: steps.proxy_url.outputs.available == 'true'
         env:
           PROXY_URL: ${{ secrets.PROXY_URL }}
         run: python test_proxy_headers.py
