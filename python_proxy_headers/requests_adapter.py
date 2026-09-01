@@ -1,11 +1,17 @@
 from requests.adapters import HTTPAdapter
 from requests.sessions import Session
+from .header_utils import validate_headers
 from .urllib3_proxy_manager import proxy_from_url
 
 class HTTPProxyHeaderAdapter(HTTPAdapter):
 	def __init__(self, proxy_headers=None):
 		super().__init__()
-		self._proxy_headers = proxy_headers or {}
+		self._proxy_headers = validate_headers(proxy_headers)
+
+	def build_response(self, req, resp):
+		response = super().build_response(req, resp)
+		response.proxy_headers = getattr(resp, "proxy_headers", {}) or {}
+		return response
 	
 	def proxy_manager_for(self, proxy, **proxy_kwargs):
 		"""Return urllib3 ProxyManager for the given proxy.

@@ -46,6 +46,8 @@ This section shows you how to quickly get up and running with proxy headers in r
 
 That's it! The ``requests_adapter`` module handles sending your custom headers to the proxy and makes proxy response headers available in the response.
 
+CONNECT response headers are copied onto ``response.headers`` except hop-by-hop and security-sensitive names (``Set-Cookie``, ``Location``, ``Content-Type``, and similar). Existing origin headers are never overwritten. The full CONNECT set is on ``response.proxy_headers``.
+
 Using Proxies with requests
 ---------------------------
 

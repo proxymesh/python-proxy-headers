@@ -6,6 +6,7 @@ from aiohttp.client import ClientSession
 from aiohttp.helpers import reify
 from aiohttp import hdrs
 from multidict import CIMultiDict, CIMultiDictProxy
+from .header_utils import merge_proxy_response_headers
 
 class ProxyTCPConnector(TCPConnector):
 	async def _create_proxy_connection(self, req: ClientRequest, traces, timeout):
@@ -144,12 +145,20 @@ class ProxyClientRequest(ClientRequest):
 
 class ProxyClientResponse(ClientResponse):
 	@reify
+	def proxy_headers(self):
+		"""Headers from the proxy CONNECT response, not merged into origin headers."""
+		raw = getattr(self, "_proxy_headers", None)
+		if raw:
+			return CIMultiDictProxy(CIMultiDict(raw))
+		return CIMultiDictProxy(CIMultiDict())
+
+	@reify
 	def headers(self):
 		proxy_headers = getattr(self, '_proxy_headers', None)
 
 		if proxy_headers:
 			headers = CIMultiDict(self._headers)
-			headers.extend(proxy_headers)
+			merge_proxy_response_headers(headers, proxy_headers)
 			return CIMultiDictProxy(headers)
 		else:
 			return self._headers

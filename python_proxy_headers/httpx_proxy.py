@@ -9,6 +9,7 @@ from httpcore._ssl import default_ssl_context
 from httpcore._trace import Trace
 from httpx import AsyncHTTPTransport, HTTPTransport, Client
 from httpx._config import DEFAULT_LIMITS, DEFAULT_TIMEOUT_CONFIG, Proxy, create_ssl_context
+from .header_utils import filter_connect_headers
 
 class ProxyTunnelHTTPConnection(TunnelHTTPConnection):
 	# Unfortunately the only way to get connect_response.headers into the Response
@@ -90,10 +91,16 @@ class ProxyTunnelHTTPConnection(TunnelHTTPConnection):
 						keepalive_expiry=self._keepalive_expiry,
 					)
 
+				self._connect_response_headers = connect_response.headers
 				self._connected = True
-		# this is the only modification
+		# Merge safe CONNECT headers without overwriting origin values
 		response = self._connection.handle_request(request)
-		response.headers = merge_headers(response.headers, connect_response.headers)
+		response.headers = merge_headers(
+			response.headers,
+			filter_connect_headers(
+				response.headers, getattr(self, "_connect_response_headers", ())
+			),
+		)
 		return response
 
 class AsyncProxyTunnelHTTPConnection(AsyncTunnelHTTPConnection):
@@ -174,10 +181,16 @@ class AsyncProxyTunnelHTTPConnection(AsyncTunnelHTTPConnection):
 						keepalive_expiry=self._keepalive_expiry,
 					)
 
+				self._connect_response_headers = connect_response.headers
 				self._connected = True
-		# this is the only modification
+		# Merge safe CONNECT headers without overwriting origin values
 		response = await self._connection.handle_async_request(request)
-		response.headers = merge_headers(response.headers, connect_response.headers)
+		response.headers = merge_headers(
+			response.headers,
+			filter_connect_headers(
+				response.headers, getattr(self, "_connect_response_headers", ())
+			),
+		)
 		return response
 
 class HTTPProxyHeaders(HTTPProxy):

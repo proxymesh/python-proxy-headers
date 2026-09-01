@@ -6,6 +6,14 @@ from urllib3.poolmanager import ProxyManager
 from urllib3.util.request import make_headers
 from urllib3.util.url import parse_url
 
+from .header_utils import (
+	merge_proxy_response_headers,
+	snapshot_headers,
+	validate_header_name,
+	validate_header_value,
+	validate_headers,
+)
+
 if sys.version_info < (3, 12, 0):
 	#####################################
 	### copied from python3.12 source ###
@@ -77,6 +85,8 @@ class HTTPSProxyConnection(HTTPSConnection):
 				self._http_vsn_str.encode("ascii"))
 			headers = [connect]
 			for header, value in self._tunnel_headers.items():
+				validate_header_name(header)
+				validate_header_value(value)
 				headers.append(f"{header}: {value}\r\n".encode("latin-1"))
 			headers.append(b"\r\n")
 			# Making a single send() call instead of one per line encourages
@@ -125,7 +135,9 @@ class HTTPSProxyConnectionPool(HTTPSConnectionPool):
 	
 	def urlopen(self, *args, **kwargs):
 		response = super().urlopen(*args, **kwargs)
-		response.headers.update(self._proxy_response_headers)
+		proxy_headers = getattr(self, "_proxy_response_headers", None)
+		response.proxy_headers = snapshot_headers(proxy_headers)
+		merge_proxy_response_headers(response.headers, proxy_headers)
 		return response
 
 class ProxyHeaderManager(ProxyManager):
@@ -137,15 +149,14 @@ class ProxyHeaderManager(ProxyManager):
 		if proxy_url is None and args:
 			proxy_url = args[0]
 		proxy_headers = kwargs.get("proxy_headers")
-		merged = dict(proxy_headers or {})
+		merged = validate_headers(dict(proxy_headers or {}))
 		if isinstance(proxy_url, str):
 			parsed = parse_url(proxy_url)
 			if parsed.auth and not any(
 				k.lower() == "proxy-authorization" for k in merged
 			):
 				merged.update(make_headers(proxy_basic_auth=parsed.auth))
-		if merged != dict(proxy_headers or {}):
-			kwargs["proxy_headers"] = merged
+		kwargs["proxy_headers"] = merged
 		super().__init__(*args, **kwargs)
 		self.pool_classes_by_scheme = {"http": HTTPConnectionPool, "https": HTTPSProxyConnectionPool}
 
