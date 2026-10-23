@@ -3,6 +3,30 @@ httpx
 
 `HTTPX <https://www.python-httpx.org/>`_ is a fully featured HTTP client for Python 3, which provides sync and async APIs, and support for both HTTP/1.1 and HTTP/2. This page describes how to use httpx with proxies and how to send and receive custom proxy headers.
 
+httpx 1.0
+---------
+
+httpx 1.0 (pre-release ``1.0.dev6``, 2026-08-31) is a rewrite. It no longer depends on httpcore, it does not provide ``HTTPTransport`` or ``AsyncHTTPTransport``, and it has no proxy or CONNECT support (`encode/httpx#947 <https://github.com/encode/httpx/issues/947>`_).
+
+Installing that release does not crash ``import python_proxy_headers.httpx_proxy``. Import warns, and calling ``get``, ``HTTPProxyTransport``, or ``AsyncHTTPProxyTransport`` raises ``UnsupportedHttpxVersion`` instead of ``ImportError``.
+
+The ``httpx`` extra stays on the 0.28 line::
+
+   pip install 'python-proxy-headers[httpx]'
+
+which installs ``httpx>=0.28,<1``. This release does not include a 1.0 adapter.
+
+Support options
+~~~~~~~~~~~~~~~
+
+1. **Stay on httpx 0.28.x.** This is the supported path. The adapter copies httpcore's private ``handle_request`` and cannot load on the 1.0 rewrite.
+
+2. **Wait for a public proxy API.** httpx 1.0's ``NetworkBackend.connect`` / ``connect_tls`` and ``Transport.send`` open a direct connection. They cannot send CONNECT headers or return the proxy's response headers. When `issue 947 <https://github.com/encode/httpx/issues/947>`_ grows a public hook, implement against that instead of another private copy.
+
+3. **A small CONNECT backend, later.** A future adapter could open the proxy socket, write CONNECT plus the custom headers, read the proxy response, wrap TLS, and pass the stream to ``httpx.Connection``. ``NetworkBackend`` does not accept an existing socket today, and the 1.0 API is still early, so this is not in this release.
+
+4. **Do not vendor httpcore** to pretend 1.0 works. That would ignore the client the user installed.
+
 Getting Started
 ---------------
 
@@ -14,7 +38,7 @@ This section shows you how to quickly get up and running with proxy headers in h
 
    .. code-block:: bash
 
-      pip install python-proxy-headers httpx
+      pip install 'python-proxy-headers[httpx]'
 
 2. Import the module:
 
