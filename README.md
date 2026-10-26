@@ -33,9 +33,21 @@ This library solves both problems for popular Python HTTP libraries.
 pip install python-proxy-headers
 ```
 
-Then install the HTTP library you want to use (e.g., `pip install requests`).
+Or install the client extra you need. Each extra pins a range that CI tests:
 
-> **Note:** This package has no dependencies by default - install only what you need.
+```bash
+pip install 'python-proxy-headers[requests]'
+pip install 'python-proxy-headers[urllib3]'
+pip install 'python-proxy-headers[httpx]'
+pip install 'python-proxy-headers[aiohttp]'
+pip install 'python-proxy-headers[pycurl]'
+pip install 'python-proxy-headers[cloudscraper]'
+pip install 'python-proxy-headers[autoscraper]'
+```
+
+The `httpx` extra is `httpx>=0.28,<1`. httpx 1.0 drops proxy support. Importing `python_proxy_headers.httpx_proxy` still succeeds, and using it raises `UnsupportedHttpxVersion`. See the [httpx docs](https://python-proxy-headers.readthedocs.io/en/latest/httpx.html).
+
+> **Note:** This package has no required dependencies - install only the extra you need.
 
 ## Quick Start
 
@@ -122,6 +134,10 @@ response = scraper.get('https://example.com')
 A test harness is included to verify proxy header functionality:
 
 ```bash
+# Header checks and a local CONNECT mock (no proxy credentials)
+python test_header_security.py
+python test_client_internals.py
+
 # Set your proxy
 export PROXY_URL='http://user:pass@proxy.example.com:8080'
 
@@ -142,8 +158,10 @@ For detailed documentation, API reference, and more examples:
 - **Full Documentation:** [python-proxy-headers.readthedocs.io](https://python-proxy-headers.readthedocs.io/en/latest/)
 - **Example Code:** [proxy-examples for Python](https://github.com/proxymesh/proxy-examples/tree/main/python)
 
-## Related Projects
+## Other languages
 
+- **[javascript-proxy-headers](https://github.com/proxymesh/javascript-proxy-headers)** - Send and read custom proxy headers on HTTPS CONNECT for Node.js HTTP clients
+- **[ruby-proxy-headers](https://github.com/proxymesh/ruby-proxy-headers)** - Send and read custom proxy headers on HTTPS CONNECT for Ruby HTTP clients
 - **[scrapy-proxy-headers](https://github.com/proxymesh/scrapy-proxy-headers)** - Proxy header support for Scrapy
 
 ## About

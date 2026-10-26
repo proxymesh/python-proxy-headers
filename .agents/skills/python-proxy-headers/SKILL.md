@@ -45,6 +45,8 @@ with ProxySession(proxy_headers={'X-ProxyMesh-Country': 'US'}) as session:
 
 ### httpx
 
+Requires `httpx>=0.28,<1` (`pip install 'python-proxy-headers[httpx]'`). httpx 1.0 drops httpcore and proxy support. Importing `httpx_proxy` still succeeds and warns; calling it raises `UnsupportedHttpxVersion`.
+
 ```python
 from python_proxy_headers.httpx_proxy import get
 

@@ -25,20 +25,27 @@ None of these modules provide good support for parsing custom response headers f
 
 If you are looking for `Scrapy <https://scrapy.org/>`_ support, please see our `scrapy-proxy-headers <https://github.com/proxymesh/scrapy-proxy-headers>`_ project.
 
+The same CONNECT header support in other languages:
+
+* `javascript-proxy-headers <https://github.com/proxymesh/javascript-proxy-headers>`_
+* `ruby-proxy-headers <https://github.com/proxymesh/ruby-proxy-headers>`_
+
 Installation
 ------------
 
 To use these extension modules, you must first do the following:
 
-1. Install the package:
+1. Install the package, optionally with the client you use:
 
    .. code-block:: bash
 
       pip install python-proxy-headers
+      pip install 'python-proxy-headers[requests]'
+      pip install 'python-proxy-headers[httpx]'
 
-2. Install the appropriate package based on the Python module you want to use.
+2. Or install the HTTP library yourself. Extras pin the ranges we test. The ``httpx`` extra is ``httpx>=0.28,<1``. httpx 1.0 is not supported yet; see :doc:`httpx`.
 
-This package does not have any dependencies because we don't know which module you want to use.
+This package does not have any required dependencies because we don't know which module you want to use.
 
 You can also find more example code in our `proxy-examples for python <https://github.com/proxymesh/proxy-examples/tree/main/python>`_.
 
