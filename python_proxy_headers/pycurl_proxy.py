@@ -38,7 +38,7 @@ from io import BytesIO
 from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Tuple
 
-from .header_utils import validate_headers
+from .header_utils import validate_headers, validate_http_method, validate_http_url
 
 try:
     import pycurl
@@ -263,6 +263,18 @@ class Response:
             raise Exception(f"HTTP Error {self.status_code}")
 
 
+def _restrict_http_protocols(curl) -> None:
+    """Limit libcurl to HTTP(S) so file:// and similar schemes cannot run."""
+    http_https = pycurl.PROTO_HTTP | pycurl.PROTO_HTTPS
+    curl.setopt(pycurl.PROTOCOLS, http_https)
+    redir_protocols = getattr(pycurl, "REDIR_PROTOCOLS", None)
+    if redir_protocols is not None:
+        try:
+            curl.setopt(redir_protocols, http_https)
+        except pycurl.error:
+            pass
+
+
 def request(
     method: str,
     url: str,
@@ -278,7 +290,7 @@ def request(
     
     Args:
         method: HTTP method (GET, POST, etc.)
-        url: Target URL
+        url: Target URL (http and https only)
         proxy: Proxy URL (e.g., 'http://user:pass@proxy:8080')
         proxy_headers: Headers to send to the proxy
         headers: Headers to send to the origin server
@@ -288,17 +300,25 @@ def request(
         
     Returns:
         Response object with body, headers, and proxy_headers
+
+    Raises:
+        ValueError: If the URL scheme is not http/https, the method is not a
+            single token, or a header name/value contains CR, LF, or NUL.
     """
+    url = validate_http_url(url)
+    method = validate_http_method(method)
+    headers = validate_headers(headers)
+
     c = pycurl.Curl()
     body = BytesIO()
     capture = HeaderCapture(c)
     
     try:
+        _restrict_http_protocols(c)
         c.setopt(pycurl.URL, url)
         c.setopt(pycurl.WRITEFUNCTION, body.write)
         
         # HTTP method
-        method = method.upper()
         if method == 'GET':
             c.setopt(pycurl.HTTPGET, 1)
         elif method == 'POST':
