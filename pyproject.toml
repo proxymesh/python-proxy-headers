@@ -10,19 +10,56 @@ authors = [
 ]
 description = "Handle custom proxy headers for http & https requests in various python libraries"
 readme = "README.md"
-requires-python = ">=3.8"
-classifiers = [
-  "Programming Language :: Python :: 3",
-  "Operating System :: OS Independent",
-	"License :: OSI Approved :: MIT License",
-	"Intended Audience :: Developers",
-	"Topic :: Internet :: WWW/HTTP",
-  "Topic :: Software Development :: Libraries :: Python Modules",
+requires-python = ">=3.10"
+keywords = [
+  "proxy",
+  "proxy-headers",
+  "https-proxy",
+  "connect",
+  "tunnel",
+  "requests",
+  "urllib3",
+  "httpx",
+  "aiohttp",
+  "web-scraping",
+  "proxymesh",
 ]
+classifiers = [
+  "Development Status :: 4 - Beta",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
+  "Operating System :: OS Independent",
+  "License :: OSI Approved :: MIT License",
+  "Intended Audience :: Developers",
+  "Topic :: Internet :: WWW/HTTP",
+  "Topic :: Internet :: Proxy Servers",
+  "Topic :: Software Development :: Libraries :: Python Modules",
+  "Framework :: AsyncIO",
+]
+
+# Newest releases checked on 2026-10-23: urllib3 2.8.0, requests 2.34.2,
+# httpx 0.28.1 (httpcore 1.0.9), aiohttp 3.14.5, pycurl 7.48.0,
+# cloudscraper 1.2.71, autoscraper 1.1.14.
+# Lower bounds are the oldest minor whose private hooks still match the
+# adapters. CI installs the newest release inside each range. httpx 1.x is
+# excluded: 1.0.dev6 drops httpcore and proxy support (encode/httpx#947).
+[project.optional-dependencies]
+urllib3 = ["urllib3>=2.2,<3"]
+requests = ["requests>=2.31,<3"]
+httpx = ["httpx>=0.28,<1"]
+aiohttp = ["aiohttp>=3.10,<4"]
+pycurl = ["pycurl>=7.45,<8"]
+cloudscraper = ["cloudscraper>=1.2.71,<2"]
+autoscraper = ["autoscraper>=1.1.14,<2"]
 
 [project.urls]
 Homepage = "https://github.com/proxymesh/python-proxy-headers"
-Changelog = "https://github.com/proxymesh/python-proxy-headers/commits/main/"
+Changelog = "https://github.com/proxymesh/python-proxy-headers/blob/main/CHANGELOG.md"
 Issues = "https://github.com/proxymesh/python-proxy-headers/issues"
 Documentation = "https://python-proxy-headers.readthedocs.io/en/latest/"
 ProxyMesh = "https://proxymesh.com"
