@@ -19,6 +19,8 @@ from python_proxy_headers.header_utils import (
     validate_header_name,
     validate_header_value,
     validate_headers,
+    validate_http_method,
+    validate_http_url,
 )
 
 
@@ -72,6 +74,54 @@ class ValidateHeadersTests(unittest.TestCase):
                 )
         finally:
             curl.close()
+
+    def test_accepts_http_methods_and_urls(self) -> None:
+        self.assertEqual(validate_http_method("get"), "GET")
+        self.assertEqual(validate_http_method("PROPFIND"), "PROPFIND")
+        self.assertEqual(validate_http_url("https://example.com/path"), "https://example.com/path")
+        self.assertEqual(validate_http_url("http://127.0.0.1:8080/"), "http://127.0.0.1:8080/")
+
+    def test_rejects_unsafe_http_method(self) -> None:
+        with self.assertRaises(ValueError):
+            validate_http_method("GET / HTTP/1.1\r\nX-Injected: pwned\r\n")
+        with self.assertRaises(ValueError):
+            validate_http_method("GET\nPUT")
+
+    def test_rejects_non_http_url_schemes(self) -> None:
+        with self.assertRaises(ValueError):
+            validate_http_url("file:///etc/passwd")
+        with self.assertRaises(ValueError):
+            validate_http_url("FILE://localhost/etc/passwd")
+        with self.assertRaises(ValueError):
+            validate_http_url("dict://127.0.0.1:1/default:help")
+        with self.assertRaises(ValueError):
+            validate_http_url("http://example.com\r\nX-Injected: pwned/")
+
+    def test_pycurl_request_rejects_file_scheme(self) -> None:
+        try:
+            from python_proxy_headers.pycurl_proxy import get, request
+        except ImportError:
+            self.skipTest("pycurl is not installed")
+        with self.assertRaises(ValueError):
+            get("file:///etc/passwd")
+        with self.assertRaises(ValueError):
+            get("file:///etc/passwd", proxy="http://127.0.0.1:9")
+        with self.assertRaises(ValueError):
+            request("GET", "dict://127.0.0.1:1/default:help")
+
+    def test_pycurl_request_rejects_origin_header_and_method_crlf(self) -> None:
+        try:
+            from python_proxy_headers.pycurl_proxy import request
+        except ImportError:
+            self.skipTest("pycurl is not installed")
+        with self.assertRaises(ValueError):
+            request(
+                "GET",
+                "http://127.0.0.1:9/",
+                headers={"X-Foo": "bar\r\nX-Injected: pwned"},
+            )
+        with self.assertRaises(ValueError):
+            request("GET / HTTP/1.1\r\nX-Injected: pwned\r\n", "http://127.0.0.1:9/")
 
 
 class MergeProxyHeadersTests(unittest.TestCase):

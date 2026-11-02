@@ -9,6 +9,7 @@ existing origin headers are never overwritten.
 from __future__ import annotations
 
 from typing import Any, Dict, List, Mapping, MutableMapping, Optional, Sequence, Tuple, Union
+from urllib.parse import urlparse
 
 RawHeaders = Union[Mapping[Any, Any], Sequence[Tuple[Any, Any]], None]
 
@@ -88,11 +89,11 @@ def validate_header_value(value: Any) -> str:
 
 
 def validate_headers(headers: Optional[Mapping[Any, Any]]) -> Dict[str, str]:
-	"""Validate a mapping of CONNECT request headers.
+	"""Validate a mapping of HTTP header names and values.
 
 	Raises:
 		ValueError: If any name or value contains CR, LF, NUL, or other
-			characters illegal in a single CONNECT header line.
+			characters illegal in a single header line.
 	"""
 	if not headers:
 		return {}
@@ -100,6 +101,43 @@ def validate_headers(headers: Optional[Mapping[Any, Any]]) -> Dict[str, str]:
 	for name, value in headers.items():
 		validated[validate_header_name(name)] = validate_header_value(value)
 	return validated
+
+
+def validate_http_method(method: Any) -> str:
+	"""Return an HTTP method token, or raise ValueError if it is unsafe.
+
+	Methods must be a single token (no spaces, slashes, or control characters)
+	so they cannot smuggle extra request lines through CURLOPT_CUSTOMREQUEST.
+	"""
+	method_s = _as_str(method).upper()
+	if not method_s:
+		raise ValueError("HTTP method must not be empty")
+	for char in method_s:
+		code = ord(char)
+		if char in "()<>@,;:\\\"/[]?={} \t" or code <= 32 or code == 127:
+			raise ValueError(f"Invalid HTTP method {method_s!r}")
+	return method_s
+
+
+def validate_http_url(url: Any) -> str:
+	"""Return an http(s) URL, or raise ValueError for other schemes.
+
+	High-level HTTP helpers must not pass caller URLs to protocol-agile
+	backends such as libcurl, which otherwise honor ``file://`` and similar
+	schemes (and ignore an HTTP proxy for those schemes).
+	"""
+	url_s = _as_str(url)
+	if not url_s or any(char in url_s for char in "\r\n\x00"):
+		raise ValueError(f"Invalid URL {url_s!r}")
+	parsed = urlparse(url_s)
+	scheme = parsed.scheme.lower()
+	if scheme not in ("http", "https"):
+		raise ValueError(
+			f"Unsupported URL scheme {parsed.scheme!r}; only http and https are allowed"
+		)
+	if not parsed.netloc:
+		raise ValueError(f"URL must include a host: {url_s!r}")
+	return url_s
 
 
 def _header_items(headers: RawHeaders) -> List[Tuple[Any, Any]]:
