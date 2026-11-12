@@ -45,6 +45,8 @@ with ProxySession(proxy_headers={'X-ProxyMesh-Country': 'US'}) as session:
 
 ### httpx
 
+Requires `httpx>=0.28,<1` (`pip install 'python-proxy-headers[httpx]'`). Importing `httpx_proxy` on httpx 1.x raises `ImportError`.
+
 ```python
 from python_proxy_headers.httpx_proxy import get
 

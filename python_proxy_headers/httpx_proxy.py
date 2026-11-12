@@ -1,3 +1,11 @@
+import httpx
+
+if not httpx.__version__.startswith("0."):
+	raise ImportError(
+		f"python_proxy_headers.httpx_proxy requires httpx>=0.28,<1 (found {httpx.__version__}); "
+		"httpx 1.0 removed proxy support. Install with: pip install 'python-proxy-headers[httpx]'"
+	)
+
 from contextlib import contextmanager
 from httpcore._sync.http_proxy import HTTPProxy, TunnelHTTPConnection, merge_headers, logger
 from httpcore._sync.http11 import HTTP11Connection

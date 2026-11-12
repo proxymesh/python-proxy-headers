@@ -20,6 +20,9 @@ classifiers = [
   "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 
+[project.optional-dependencies]
+httpx = ["httpx>=0.28,<1"]
+
 [project.urls]
 Homepage = "https://github.com/proxymesh/python-proxy-headers"
 Changelog = "https://github.com/proxymesh/python-proxy-headers/commits/main/"

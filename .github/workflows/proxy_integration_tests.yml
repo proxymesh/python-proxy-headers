@@ -33,8 +33,8 @@ jobs:
           pip install -e .
           pip install urllib3 requests aiohttp httpx pycurl
 
-      - name: Run header security unit tests
-        run: python test_header_security.py
+      - name: Run header security and httpx guard tests
+        run: python test_header_security.py && python test_httpx_guard.py
 
   integration:
     runs-on: ubuntu-24.04
