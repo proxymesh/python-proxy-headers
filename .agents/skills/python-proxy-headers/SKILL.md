@@ -45,7 +45,7 @@ with ProxySession(proxy_headers={'X-ProxyMesh-Country': 'US'}) as session:
 
 ### httpx
 
-Requires `httpx>=0.28,<1` (`pip install 'python-proxy-headers[httpx]'`). httpx 1.x has no httpcore or proxy support. Importing `httpx_proxy` warns, and calling it raises `UnsupportedHttpxVersion`.
+Requires `httpx>=0.28,<1` (`pip install 'python-proxy-headers[httpx]'`). Importing `httpx_proxy` on httpx 1.x raises `ImportError`.
 
 ```python
 from python_proxy_headers.httpx_proxy import get
@@ -106,7 +106,7 @@ response = scraper.get('https://example.com')
 
 Custom headers sent during CONNECT are proxy-specific. Check your proxy provider's docs.
 
-Example with [ProxyMesh](https://docs.proxymesh.com/):
+Example with [ProxyMesh](https://proxymesh.com):
 
 | Header | Direction | Purpose |
 |--------|-----------|---------|

@@ -6,9 +6,7 @@ httpx
 httpx 1.0
 ---------
 
-httpx 1.0 (pre-release ``1.0.dev6``) drops httpcore, ``HTTPTransport``, and proxy support (`encode/httpx#947 <https://github.com/encode/httpx/issues/947>`_). Importing ``python_proxy_headers.httpx_proxy`` warns instead of crashing. ``get``, ``HTTPProxyTransport``, and ``AsyncHTTPProxyTransport`` raise ``UnsupportedHttpxVersion``.
-
-Install the supported line with ``pip install 'python-proxy-headers[httpx]'`` (``httpx>=0.28,<1``).
+httpx 1.0 removes httpcore and proxy support. Importing ``python_proxy_headers.httpx_proxy`` raises ``ImportError``. Install the supported line with ``pip install 'python-proxy-headers[httpx]'`` (``httpx>=0.28,<1``).
 
 Getting Started
 ---------------
