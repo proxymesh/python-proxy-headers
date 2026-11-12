@@ -87,9 +87,6 @@ jobs:
     if: needs.lookup.outputs.version != ''
     runs-on: ubuntu-24.04
     timeout-minutes: 15
-    environment:
-      name: release
-      url: https://pypi.org/p/python-proxy-headers
     permissions:
       contents: read
       id-token: write

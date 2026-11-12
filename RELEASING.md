@@ -29,20 +29,19 @@ Don't make Release check a required check: release PRs are opened with GITHUB_TO
 
 ### Publish
 
-A push to `main` looks up the pull request for that commit. When the pull request came from `release/X.Y.Z`, the **publish** job builds the package and uploads it to PyPI with trusted publishing (OIDC) in the GitHub environment `release`. A version that is already on PyPI fails the upload. The **github-release** job then runs `gh release view vX.Y.Z` or creates that release. The notes are the changelog section.
+A push to `main` looks up the pull request for that commit. When the pull request came from `release/X.Y.Z`, the **publish** job builds the package and uploads it to PyPI with trusted publishing (OIDC). A version that is already on PyPI fails the upload. The **github-release** job then runs `gh release view vX.Y.Z` or creates that release. The notes are the changelog section.
 
 ## One-time owner setup
 
 Do this before the next `release/*` merge. This change does not edit repository or PyPI settings.
 
-1. Create a GitHub environment named `release` (Settings → Environments). Optional: required reviewers. Allow deployments from `main`.
-2. On PyPI, add a trusted publisher for [python-proxy-headers](https://pypi.org/manage/project/python-proxy-headers/settings/publishing/):
+1. On PyPI, add a trusted publisher for [python-proxy-headers](https://pypi.org/manage/project/python-proxy-headers/settings/publishing/):
    - Owner: `proxymesh`
    - Repository: `python-proxy-headers`
    - Workflow: `publish.yml`
-   - Environment: `release`
-3. After one release succeeds with `release`, remove the PyPI trusted publisher with environment `pypi`, then delete the `pypi` and `testpypi` GitHub environments and any PYPI_API_TOKEN secret.
-4. Settings → Actions → General → Workflow permissions: allow GitHub Actions to create pull requests. Dependabot auto-merge already needs that.
+   - Environment: leave blank
+2. After one successful publish, remove the PyPI trusted publisher with environment `pypi`, then delete the `pypi` and `testpypi` GitHub environments and any PYPI_API_TOKEN secret.
+3. Settings → Actions → General → Workflow permissions: allow GitHub Actions to create pull requests. Dependabot auto-merge already needs that.
 
 ## Tags
 
