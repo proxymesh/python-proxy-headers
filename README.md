@@ -158,6 +158,7 @@ For detailed documentation, API reference, and more examples:
 
 - **Full Documentation:** [python-proxy-headers.readthedocs.io](https://python-proxy-headers.readthedocs.io/en/latest/)
 - **Example Code:** [proxy-examples for Python](https://github.com/proxymesh/proxy-examples/tree/main/python)
+- **Releasing:** [RELEASING.md](RELEASING.md)
 
 ## Other languages
 

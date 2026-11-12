@@ -1,0 +1,80 @@
+# Open a release/X.Y.Z pull request from main.
+# A pull request opened with GITHUB_TOKEN does not run pull_request workflows,
+# so this job runs the release checks before it pushes.
+
+name: Prepare release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "X.Y.Z, or patch, minor, or major"
+        required: true
+        type: string
+
+permissions: {}
+
+concurrency:
+  group: prepare-release
+  cancel-in-progress: false
+
+jobs:
+  prepare:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    permissions:
+      contents: write
+      pull-requests: write
+    steps:
+      - name: Require main
+        env:
+          REF: ${{ github.ref }}
+        run: test "$REF" = "refs/heads/main"
+
+      - name: Checkout main
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          ref: main
+          persist-credentials: true
+
+      - name: Set up Python
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+
+      - name: Bump version and changelog
+        id: bump
+        env:
+          VERSION_INPUT: ${{ inputs.version }}
+          NOTES_FILE: ${{ runner.temp }}/release-notes.md
+        run: python .github/scripts/release_lib.py bump
+
+      - name: Check version and changelog
+        run: python .github/scripts/release_lib.py check
+
+      - name: Build sdist and wheel
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install build
+          python -m build
+
+      - name: Open the release pull request
+        env:
+          GH_TOKEN: ${{ github.token }}
+          NOTES_FILE: ${{ runner.temp }}/release-notes.md
+          VERSION: ${{ steps.bump.outputs.version }}
+        run: |
+          set -euo pipefail
+          branch="release/${VERSION}"
+          git checkout -b "$branch"
+          git add -- pyproject.toml docs/conf.py CHANGELOG.md
+          git -c user.name="github-actions[bot]" \
+            -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            commit -m "chore: bump version to ${VERSION}"
+          git push origin "HEAD:refs/heads/${branch}"
+          gh pr create \
+            --repo "$GITHUB_REPOSITORY" \
+            --base main \
+            --head "$branch" \
+            --title "Release ${VERSION}" \
+            --body-file "$NOTES_FILE"

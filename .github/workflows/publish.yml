@@ -1,133 +1,153 @@
+# pull_request: Release check (versions, changelog, sdist/wheel).
+# push to main: publish when the commit is a merged release/X.Y.Z pull request.
+
 name: Publish to PyPI
 
 on:
-  release:
-    types: [published]
-
-  # Allow manual trigger for testing
-  workflow_dispatch:
-    inputs:
-      test_pypi:
-        description: "Publish to TestPyPI instead of PyPI"
-        required: false
-        default: false
-        type: boolean
-
-  # GitHub does not start new workflow runs for events caused by the default
-  # GITHUB_TOKEN (e.g. gh release create in another workflow). After
-  # "Release on merge" creates a release, trigger publish here instead.
-  workflow_run:
-    workflows: [Release on merge]
-    types: [completed]
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
 
 permissions:
   contents: read
-  id-token: write
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: false
 
 jobs:
-  gate:
+  release-check:
+    name: Release check
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-24.04
-    outputs:
-      publish: ${{ steps.decide.outputs.publish }}
-    steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        if: github.event_name == 'workflow_run'
-        with:
-          ref: main
-
-      - id: decide
-        env:
-          GH_TOKEN: ${{ github.token }}
-        run: |
-          set -euo pipefail
-          if [[ "${{ github.event_name }}" != "workflow_run" ]]; then
-            echo "publish=true" >> "${GITHUB_OUTPUT}"
-            exit 0
-          fi
-          if [[ "${{ github.event.workflow_run.conclusion }}" != "success" ]]; then
-            echo "publish=false" >> "${GITHUB_OUTPUT}"
-            exit 0
-          fi
-          VERSION="$(grep -m1 '^version = ' pyproject.toml | cut -d'"' -f2)"
-          TAG="v${VERSION}"
-          if gh release view "${TAG}" --repo "${{ github.repository }}" >/dev/null 2>&1; then
-            echo "publish=true" >> "${GITHUB_OUTPUT}"
-          else
-            echo "No GitHub release ${TAG} yet (or release job was skipped); skipping publish."
-            echo "publish=false" >> "${GITHUB_OUTPUT}"
-          fi
-
-  build:
-    name: Build distribution
-    needs: gate
-    if: needs.gate.outputs.publish == 'true'
-    runs-on: ubuntu-24.04
-
+    timeout-minutes: 15
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          ref: ${{ github.event_name == 'workflow_run' && 'main' || github.event_name == 'release' && github.ref || 'main' }}
+          persist-credentials: false
 
       - name: Set up Python
         uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
-          python-version: "3.x"
+          python-version: "3.12"
 
-      - name: Install build dependencies
+      - name: Check version and changelog
+        run: python .github/scripts/release_lib.py check
+
+      - name: Build sdist and wheel
         run: |
           python -m pip install --upgrade pip
-          pip install build
+          python -m pip install build
+          python -m build
 
-      - name: Build package
-        run: python -m build
-
-      - name: Store distribution packages
-        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        with:
-          name: python-package-distributions
-          path: dist/
-
-  publish-to-pypi:
-    name: Publish to PyPI
-    if: >-
-      github.event_name == 'workflow_run' ||
-      github.event_name == 'release' ||
-      (github.event_name == 'workflow_dispatch' && inputs.test_pypi == false)
-    needs: build
+  lookup:
+    if: github.event_name == 'push'
     runs-on: ubuntu-24.04
-
-    environment:
-      name: pypi
-      url: https://pypi.org/p/python-proxy-headers
-
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      version: ${{ steps.release.outputs.version }}
     steps:
-      - name: Download distribution packages
-        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          name: python-package-distributions
-          path: dist/
+          persist-credentials: false
+
+      - name: Find the release pull request
+        id: release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          pulls=$(gh api "repos/${GITHUB_REPOSITORY}/commits/${GITHUB_SHA}/pulls")
+          mapfile -t refs < <(
+            jq -r --arg repo "$GITHUB_REPOSITORY" '
+              .[]
+              | select(
+                  .base.ref == "main"
+                  and .merged_at != null
+                  and (.head.ref | startswith("release/"))
+                  and .head.repo.full_name == $repo
+                )
+              | .head.ref
+            ' <<<"$pulls"
+          )
+          if [ "${#refs[@]}" -eq 0 ]; then
+            echo "Not a release merge."
+            exit 0
+          fi
+          if [ "${#refs[@]}" -ne 1 ]; then
+            echo "This commit matches more than one release pull request."
+            exit 1
+          fi
+          version="${refs[0]#release/}"
+          echo "version=${version}" >> "$GITHUB_OUTPUT"
+
+  publish:
+    needs: lookup
+    if: needs.lookup.outputs.version != ''
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    environment:
+      name: release
+      url: https://pypi.org/p/python-proxy-headers
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Python
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
+        with:
+          python-version: "3.12"
+
+      - name: Check version and changelog
+        env:
+          HEAD_REF: release/${{ needs.lookup.outputs.version }}
+        run: python .github/scripts/release_lib.py check
+
+      - name: Build sdist and wheel
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install build
+          python -m build
 
       - name: Publish to PyPI
         uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # v1.14.3
 
-  publish-to-testpypi:
-    name: Publish to TestPyPI
-    if: github.event_name == 'workflow_dispatch' && inputs.test_pypi == true
-    needs: build
+  github-release:
+    needs: [lookup, publish]
+    if: needs.lookup.outputs.version != ''
     runs-on: ubuntu-24.04
-
-    environment:
-      name: testpypi
-      url: https://test.pypi.org/p/python-proxy-headers
-
+    timeout-minutes: 15
+    permissions:
+      contents: write
     steps:
-      - name: Download distribution packages
-        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
-          name: python-package-distributions
-          path: dist/
+          persist-credentials: false
 
-      - name: Publish to TestPyPI
-        uses: pypa/gh-action-pypi-publish@7245906fb61fa33a13554f9d5fb856fe61758086 # v1.14.3
+      - name: Set up Python
+        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
-          repository-url: https://test.pypi.org/legacy/
+          python-version: "3.12"
+
+      - name: Create GitHub Release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.lookup.outputs.version }}
+        run: |
+          set -euo pipefail
+          python .github/scripts/release_lib.py notes > "$RUNNER_TEMP/notes.md"
+          gh release view "v${VERSION}" \
+            || gh release create "v${VERSION}" \
+              --target "$GITHUB_SHA" \
+              --title "v${VERSION}" \
+              --notes-file "$RUNNER_TEMP/notes.md"
