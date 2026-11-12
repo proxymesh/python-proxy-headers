@@ -4,7 +4,7 @@
 
 1. On `main`, write the notes under `## Unreleased` in `CHANGELOG.md` and merge them.
 2. Actions → **Prepare release** → **Run workflow** on `main`.
-3. Set **version** to `X.Y.Z`, or to `patch`, `minor`, or `major`. The next release is a minor, `0.3.0`, because `main` no longer supports Python 3.8 or 3.9.
+3. Set **version** to `X.Y.Z`, or to `patch`, `minor`, or `major`.
 4. The workflow bumps `pyproject.toml` and `docs/conf.py`, moves Unreleased to `## X.Y.Z - YYYY-MM-DD`, runs the release checks, and builds the sdist and wheel. It then opens a pull request titled `Release X.Y.Z` from `release/X.Y.Z`. The body is that changelog section.
 5. Merge the pull request into `main`.
 
@@ -25,6 +25,8 @@ Version manifests:
 
 The **Release check** job in `.github/workflows/publish.yml` runs on pull requests to `main`. It checks that the version manifests match, that `CHANGELOG.md` has `## X.Y.Z - YYYY-MM-DD` for that version, and that a `release/*` branch name matches it. It builds the sdist and wheel.
 
+Don't make Release check a required check: release PRs are opened with GITHUB_TOKEN, so it doesn't run on them unless you close and reopen the PR.
+
 ### Publish
 
 A push to `main` looks up the pull request for that commit. When the pull request came from `release/X.Y.Z`, the **publish** job builds the package and uploads it to PyPI with trusted publishing (OIDC) in the GitHub environment `release`. A version that is already on PyPI fails the upload. The **github-release** job then runs `gh release view vX.Y.Z` or creates that release. The notes are the changelog section.
@@ -39,9 +41,8 @@ Do this before the next `release/*` merge. This change does not edit repository 
    - Repository: `python-proxy-headers`
    - Workflow: `publish.yml`
    - Environment: `release`
-3. Publishing already uses OIDC with the GitHub environment `pypi`. After one release succeeds with `release`, remove the trusted publisher whose environment is `pypi`, then delete the `pypi` environment if nothing else uses it.
-4. The workflows have no PyPI API token. Delete a `PYPI_API_TOKEN` secret if one is stored on the repository or the `pypi` environment.
-5. Settings → Actions → General → Workflow permissions: allow GitHub Actions to create pull requests. Dependabot auto-merge already needs that.
+3. After one release succeeds with `release`, remove the PyPI trusted publisher with environment `pypi`, then delete the `pypi` and `testpypi` GitHub environments and any PYPI_API_TOKEN secret.
+4. Settings → Actions → General → Workflow permissions: allow GitHub Actions to create pull requests. Dependabot auto-merge already needs that.
 
 ## Tags
 

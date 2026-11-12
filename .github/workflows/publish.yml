@@ -48,15 +48,10 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 15
     permissions:
-      contents: read
       pull-requests: read
     outputs:
       version: ${{ steps.release.outputs.version }}
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
-        with:
-          persist-credentials: false
-
       - name: Find the release pull request
         id: release
         env:
@@ -134,18 +129,13 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Set up Python
-        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
-        with:
-          python-version: "3.12"
-
       - name: Create GitHub Release
         env:
           GH_TOKEN: ${{ github.token }}
           VERSION: ${{ needs.lookup.outputs.version }}
         run: |
           set -euo pipefail
-          python .github/scripts/release_lib.py notes > "$RUNNER_TEMP/notes.md"
+          python3 .github/scripts/release_lib.py notes > "$RUNNER_TEMP/notes.md"
           gh release view "v${VERSION}" \
             || gh release create "v${VERSION}" \
               --target "$GITHUB_SHA" \

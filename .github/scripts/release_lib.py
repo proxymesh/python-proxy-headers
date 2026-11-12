@@ -74,10 +74,9 @@ def check():
         for line in changelog.splitlines()
         if (match := DATED.match(line.strip())) and match.group(1) == version
     ]
-    for day in dates:
-        datetime.strptime(day, "%Y-%m-%d")
     if len(dates) != 1:
         raise SystemExit(f"CHANGELOG.md needs one '## {version} - YYYY-MM-DD' section.")
+    datetime.strptime(dates[0], "%Y-%m-%d")
     head = os.environ.get("GITHUB_HEAD_REF") or os.environ.get("HEAD_REF") or ""
     if head.startswith("release/") and head != f"release/{version}":
         raise SystemExit(f"branch {head} does not match version {version}.")

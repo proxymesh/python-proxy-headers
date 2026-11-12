@@ -13,7 +13,7 @@ Follow `RELEASING.md` at the repository root. Leave the pull request for a perso
 
 ## Version
 
-Read `[project].version` in `pyproject.toml`. `/release` with no version means `patch`. `/release X.Y.Z` uses that version. The value is `X.Y.Z`, `patch`, `minor`, or `major`. The next release is a minor (`0.3.0`).
+Read `[project].version` in `pyproject.toml`. `/release` with no version means `patch`. `/release X.Y.Z` uses that version. The value is `X.Y.Z`, `patch`, `minor`, or `major`.
 
 ## Preconditions
 
