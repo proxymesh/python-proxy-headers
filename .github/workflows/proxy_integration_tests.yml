@@ -1,7 +1,11 @@
-# Integration tests against a real proxy (PROXY_URL). Add repository secret PROXY_URL
-# under Settings → Secrets and variables → Actions, then mark this workflow as a required
-# status check under branch protection (pull_request events only receive secrets for PRs
-# from the same repository, not from forks).
+# Pull-request checks.
+# - unit: Python 3.10 and 3.15, client extras, header tests, the httpx guard,
+#   and private-hook checks (no PROXY_URL).
+# - integration: real proxy via the PROXY_URL secret. pull_request events only
+#   receive secrets for PRs from this repository, not from forks. Add PROXY_URL
+#   under Settings → Secrets and variables → Actions, and mark this workflow as
+#   a required status check under branch protection.
+# Runners are ubuntu-24.04. Do not switch these jobs to ubuntu-latest.
 
 name: Proxy integration tests
 
@@ -14,6 +18,10 @@ permissions:
 jobs:
   unit:
     runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.10", "3.15"]
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
@@ -22,19 +30,21 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
-          python-version: "3.x"
+          python-version: ${{ matrix.python-version }}
 
       - name: Install system dependencies (pycurl)
         run: sudo apt-get update && sudo apt-get install -y libcurl4-openssl-dev
 
-      - name: Install package and test dependencies
+      - name: Install package and compatible client extras
         run: |
           python -m pip install --upgrade pip
-          pip install -e .
-          pip install urllib3 requests aiohttp httpx pycurl
+          pip install -e ".[urllib3,requests,httpx,aiohttp,pycurl,cloudscraper,autoscraper]"
 
       - name: Run header security and httpx guard tests
         run: python test_header_security.py && python test_httpx_guard.py
+
+      - name: Run private-hook tests
+        run: python test_client_internals.py
 
   integration:
     runs-on: ubuntu-24.04
@@ -47,16 +57,15 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
         with:
-          python-version: "3.x"
+          python-version: "3.15"
 
       - name: Install system dependencies (pycurl)
         run: sudo apt-get update && sudo apt-get install -y libcurl4-openssl-dev
 
-      - name: Install package and test dependencies
+      - name: Install package and compatible client extras
         run: |
           python -m pip install --upgrade pip
-          pip install -e .
-          pip install urllib3 requests aiohttp httpx cloudscraper autoscraper pycurl
+          pip install -e ".[urllib3,requests,httpx,aiohttp,pycurl,cloudscraper,autoscraper]"
 
       - name: Require PROXY_URL Actions secret
         env:
