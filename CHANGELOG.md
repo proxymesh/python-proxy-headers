@@ -1,5 +1,9 @@
 # Changelog
 
+## Unreleased
+
+- Importing `python_proxy_headers.httpx_proxy` on httpx >= 1 warns instead of raising `ImportError`. httpx 1.0.dev6 has no httpcore, `HTTPTransport`, or proxy support. The helpers raise `UnsupportedHttpxVersion`. The `[httpx]` extra is `httpx>=0.28,<1`.
+
 ## 0.2.4 - 2026-11-09
 
 ### Security

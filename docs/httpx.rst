@@ -3,6 +3,13 @@ httpx
 
 `HTTPX <https://www.python-httpx.org/>`_ is a fully featured HTTP client for Python 3, which provides sync and async APIs, and support for both HTTP/1.1 and HTTP/2. This page describes how to use httpx with proxies and how to send and receive custom proxy headers.
 
+httpx 1.0
+---------
+
+httpx 1.0 (pre-release ``1.0.dev6``) drops httpcore, ``HTTPTransport``, and proxy support (`encode/httpx#947 <https://github.com/encode/httpx/issues/947>`_). Importing ``python_proxy_headers.httpx_proxy`` warns instead of crashing. ``get``, ``HTTPProxyTransport``, and ``AsyncHTTPProxyTransport`` raise ``UnsupportedHttpxVersion``.
+
+Install the supported line with ``pip install 'python-proxy-headers[httpx]'`` (``httpx>=0.28,<1``).
+
 Getting Started
 ---------------
 
@@ -14,7 +21,7 @@ This section shows you how to quickly get up and running with proxy headers in h
 
    .. code-block:: bash
 
-      pip install python-proxy-headers httpx
+      pip install 'python-proxy-headers[httpx]'
 
 2. Import the module:
 

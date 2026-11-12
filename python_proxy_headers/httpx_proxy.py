@@ -1,15 +1,106 @@
+"""CONNECT proxy headers for httpx 0.28.
+
+httpx >= 1 has no httpcore, HTTPTransport, or proxy support. Import warns
+instead of crashing, and the helpers raise UnsupportedHttpxVersion.
+The [httpx] extra is httpx>=0.28,<1.
+"""
+
+import warnings
 from contextlib import contextmanager
-from httpcore._sync.http_proxy import HTTPProxy, TunnelHTTPConnection, merge_headers, logger
-from httpcore._sync.http11 import HTTP11Connection
-from httpcore._async.http_proxy import AsyncHTTPProxy, AsyncTunnelHTTPConnection
-from httpcore._async.http11 import AsyncHTTP11Connection
-from httpcore._models import URL, Request
-from httpcore._exceptions import ProxyError
-from httpcore._ssl import default_ssl_context
-from httpcore._trace import Trace
-from httpx import AsyncHTTPTransport, HTTPTransport, Client
-from httpx._config import DEFAULT_LIMITS, DEFAULT_TIMEOUT_CONFIG, Proxy, create_ssl_context
+from typing import Any, Callable, Optional
+
 from .header_utils import filter_connect_headers
+
+_HELPERS = (
+	"ProxyTunnelHTTPConnection", "AsyncProxyTunnelHTTPConnection",
+	"HTTPProxyHeaders", "AsyncHTTPProxyHeaders",
+	"HTTPProxyTransport", "AsyncHTTPProxyTransport",
+	"request", "get", "options", "head", "post", "put", "patch", "delete", "stream",
+)
+
+
+class UnsupportedHttpxVersion(RuntimeError):
+	"""The installed httpx cannot send or read CONNECT proxy headers."""
+
+
+def httpx_major(version: Optional[str]) -> Optional[int]:
+	"""Numeric major version. ``1.0.dev6`` is 1 and ``0.28.1`` is 0."""
+	if not version:
+		return None
+	digits = ""
+	for char in version.strip().split(".", 1)[0]:
+		if not char.isdigit():
+			break
+		digits += char
+	return int(digits) if digits else None
+
+
+def _blocked_httpx_version() -> Optional[str]:
+	try:
+		import httpx
+	except ImportError:
+		return None
+	version = getattr(httpx, "__version__", None)
+	version = version if isinstance(version, str) and version else None
+	major = httpx_major(version)
+	if major is not None:
+		return version if major >= 1 else None
+	has_transport = hasattr(httpx, "HTTPTransport") and hasattr(httpx, "AsyncHTTPTransport")
+	return None if has_transport else (version or "1")
+
+
+def _use_httpx_blockers(version: str) -> None:
+	"""Warn once, then make the public helpers raise UnsupportedHttpxVersion."""
+	message = (
+		f"httpx {version} is installed, but python-proxy-headers only supports "
+		"httpx>=0.28,<1. httpx 1.0 drops httpcore, HTTPTransport, and proxy "
+		"support (https://github.com/encode/httpx/issues/947). "
+		"Calling these helpers raises UnsupportedHttpxVersion. "
+		"Install a compatible release with pip install 'python-proxy-headers[httpx]'."
+	)
+	warnings.warn(message, UserWarning, stacklevel=3)
+
+	def raiser(name: str) -> Callable[..., Any]:
+		def _raise(*_args: Any, **_kwargs: Any) -> Any:
+			raise UnsupportedHttpxVersion(message)
+
+		_raise.__name__ = name
+		return _raise
+
+	for name in _HELPERS:
+		if name[:1].islower():
+			globals()[name] = raiser(name)
+			continue
+		fn = raiser(name)
+
+		def _init(self: Any, *args: Any, _fn: Callable[..., Any] = fn, **kwargs: Any) -> None:
+			_fn(*args, **kwargs)
+
+		cls = type(name, (), {"__init__": _init})
+		cls.__module__ = __name__
+		globals()[name] = cls
+
+
+_HTTPX_BLOCKED = _blocked_httpx_version()
+if _HTTPX_BLOCKED:
+	class _HttpxMissing:
+		pass
+
+	HTTPProxy = TunnelHTTPConnection = AsyncHTTPProxy = AsyncTunnelHTTPConnection = _HttpxMissing
+	HTTPTransport = AsyncHTTPTransport = URL = _HttpxMissing
+	DEFAULT_LIMITS = DEFAULT_TIMEOUT_CONFIG = None
+else:
+	from httpcore._sync.http_proxy import HTTPProxy, TunnelHTTPConnection, merge_headers, logger
+	from httpcore._sync.http11 import HTTP11Connection
+	from httpcore._async.http_proxy import AsyncHTTPProxy, AsyncTunnelHTTPConnection
+	from httpcore._async.http11 import AsyncHTTP11Connection
+	from httpcore._models import URL, Request
+	from httpcore._exceptions import ProxyError
+	from httpcore._ssl import default_ssl_context
+	from httpcore._trace import Trace
+	from httpx import AsyncHTTPTransport, HTTPTransport, Client
+	from httpx._config import DEFAULT_LIMITS, DEFAULT_TIMEOUT_CONFIG, Proxy, create_ssl_context
+
 
 class ProxyTunnelHTTPConnection(TunnelHTTPConnection):
 	# Unfortunately the only way to get connect_response.headers into the Response
@@ -387,3 +478,7 @@ def stream(method: str,
 	) as client:
 		with client.stream(method=method, url=url, **kwargs) as response:
 			yield response
+
+
+if _HTTPX_BLOCKED:
+	_use_httpx_blockers(_HTTPX_BLOCKED)
