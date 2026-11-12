@@ -106,7 +106,7 @@ response = scraper.get('https://example.com')
 
 Custom headers sent during CONNECT are proxy-specific. Check your proxy provider's docs.
 
-Example with [ProxyMesh](https://proxymesh.com):
+Example with [ProxyMesh](https://docs.proxymesh.com/):
 
 | Header | Direction | Purpose |
 |--------|-----------|---------|
