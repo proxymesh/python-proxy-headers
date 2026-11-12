@@ -9,7 +9,7 @@
 project = 'Python Proxy Headers'
 copyright = '2025, ProxyMesh'
 author = 'ProxyMesh'
-release = '0.1.0'
+release = '0.2.4'
 
 # -- General configuration ---------------------------------------------------
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#general-configuration
