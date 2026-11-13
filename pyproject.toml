@@ -62,10 +62,6 @@ Issues = "https://github.com/proxymesh/python-proxy-headers/issues"
 Documentation = "https://python-proxy-headers.readthedocs.io/en/latest/"
 ProxyMesh = "https://proxymesh.com"
 
-[tool.ruff]
-target-version = "py310"
-
-# Ruff 0.16+ defaults to hundreds of rules and drops E401. This is the
-# pre-0.16 default, which is the set the four fixes here were counted on.
 [tool.ruff.lint]
+# Pre-0.16 default set; widen in follow-up PRs (PLC0415, T201).
 select = ["E4", "E7", "E9", "F"]

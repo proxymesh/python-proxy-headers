@@ -5,8 +5,7 @@
 #   receive secrets for PRs from this repository, not from forks. Add PROXY_URL
 #   under Settings → Secrets and variables → Actions, and mark this workflow as
 #   a required status check under branch protection.
-# - lint: actionlint, zizmor, shellcheck, shfmt, ruff, and hostname grep.
-#   Python 3.12 because zizmor 1.32 needs Python 3.11 or newer.
+# - lint: scripts/lint.sh
 # Runners are ubuntu-24.04. Do not switch these jobs to ubuntu-latest.
 
 name: Proxy integration tests
@@ -90,11 +89,6 @@ jobs:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
-
-      - name: Set up Python
-        uses: actions/setup-python@6d4fd22b20465ccc0f7354476588e8df7c9ca0e0 # v7.1.0
-        with:
-          python-version: "3.12"
 
       - name: Install lint tools
         run: bash scripts/install-lint-tools.sh
