@@ -1,4 +1,5 @@
-import http, sys
+import http
+import sys
 from http.client import _read_headers
 from urllib3.connection import HTTPSConnection
 from urllib3.connectionpool import HTTPConnectionPool, HTTPSConnectionPool

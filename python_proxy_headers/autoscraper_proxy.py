@@ -24,7 +24,7 @@ Example usage:
     )
 """
 
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional
 from urllib.parse import urlparse
 
 try:
@@ -209,7 +209,6 @@ class ProxyAutoScraper(AutoScraper):
         Returns:
             List of similar results
         """
-        from html import unescape
         from autoscraper.utils import normalize, unique_hashable, unique_stack_list
         
         if not wanted_list and not (wanted_dict and any(wanted_dict.values())):

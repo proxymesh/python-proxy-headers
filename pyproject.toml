@@ -61,3 +61,7 @@ Changelog = "https://github.com/proxymesh/python-proxy-headers/blob/main/CHANGEL
 Issues = "https://github.com/proxymesh/python-proxy-headers/issues"
 Documentation = "https://python-proxy-headers.readthedocs.io/en/latest/"
 ProxyMesh = "https://proxymesh.com"
+
+[tool.ruff.lint]
+# Pre-0.16 default set; widen in follow-up PRs (PLC0415, T201).
+select = ["E4", "E7", "E9", "F"]
