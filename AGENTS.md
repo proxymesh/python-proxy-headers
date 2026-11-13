@@ -68,11 +68,6 @@ Read `.cursorrules` too (git identity, PR footer rule).
 - Before finishing, re-read your full diff as a strict reviewer and fix
   anything this list would flag. Report per-file line counts.
 
-Owner rule (all ProxyMesh repos): never use specific ProxyMesh proxy server
-domains (any `*.proxymesh.com` proxy host) in code, docs, examples, tests,
-changelogs or PR bodies; use `proxy.example.com` and
-<https://docs.proxymesh.com/>.
-
 ## Rules and what enforces them
 
 | Rule | Enforced by |
