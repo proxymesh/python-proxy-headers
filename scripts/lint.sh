@@ -23,9 +23,22 @@ check_hostnames() {
     grep -vE ':(docs|www)\.proxymesh\.com$'
 }
 
-main() {
+ensure_tools() {
   export PATH="${HOME}/.local/bin:${PATH}"
+  local cmd
+  for cmd in actionlint shellcheck shfmt ruff; do
+    if ! command -v "${cmd}" >/dev/null; then
+      bash "$(dirname "$0")/install-lint-tools.sh"
+      export PATH="${HOME}/.local/bin:${PATH}"
+      return
+    fi
+  done
+}
+
+main() {
   cd "$(git rev-parse --show-toplevel)"
+  ensure_tools
+  export PATH="${HOME}/.local/bin:${PATH}"
   local -a sh_files
   mapfile -t sh_files < <(git ls-files -co --exclude-standard '*.sh')
 
