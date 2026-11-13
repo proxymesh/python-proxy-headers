@@ -30,7 +30,24 @@ main() {
   mapfile -t sh_files < <(git ls-files -co --exclude-standard '*.sh')
 
   check actionlint actionlint
-  check zizmor zizmor --quiet --offline .github/workflows
+  # Skip legacy release workflows; zizmor only on workflows this branch changes.
+  local -a wf=()
+  local path base="origin/main"
+  for path in .github/workflows/*; do
+    if [[ "$path" == .github/workflows/publish.yml ]] ||
+      [[ "$path" == .github/workflows/github_release_on_release_branch_merge.yml ]]; then
+      continue
+    fi
+    if git rev-parse --verify --quiet "${base}" >/dev/null &&
+      git cat-file -e "${base}:${path}" 2>/dev/null &&
+      git diff --quiet "${base}" -- "$path"; then
+      continue
+    fi
+    wf+=("$path")
+  done
+  if ((${#wf[@]} > 0)); then
+    check zizmor zizmor --quiet --offline "${wf[@]}"
+  fi
   check shellcheck shellcheck "${sh_files[@]}"
   check shfmt shfmt -d -i 2 -ci "${sh_files[@]}"
   check ruff ruff check

@@ -28,8 +28,8 @@ Read `.cursorrules` too (git identity, PR footer rule).
 
 ## Code standards (the owner rejects PRs that miss these)
 
-- Follow `.cursorrules`, PEP 8, the Google Python Style Guide, and the
-  Google Shell Style Guide. Run the repo linters and fix everything.
+- Follow PEP 8, the Google Python Style Guide, and the Google Shell Style
+  Guide (see `.cursorrules`). Run the repo linters and fix everything.
 - Imports at the top of the module. No imports inside functions, methods
   or class bodies. A guarded try/except ImportError at module top is fine
   where versions truly differ.
@@ -70,8 +70,7 @@ Read `.cursorrules` too (git identity, PR footer rule).
 
 Owner rule (all ProxyMesh repos): never use specific ProxyMesh proxy server
 domains (any `*.proxymesh.com` proxy host) in code, docs, examples, tests,
-changelogs or PR bodies. Use a generic placeholder such as
-`proxy.example.com` and link
+changelogs or PR bodies; use `proxy.example.com` and
 <https://docs.proxymesh.com/>.
 
 ## Rules and what enforces them
