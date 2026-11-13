@@ -10,12 +10,10 @@
 name: dependabot-auto-merge
 
 on:
-  pull_request_target:
+  pull_request:
     types: [opened, reopened, synchronize]
 
-permissions:
-  contents: write
-  pull-requests: write
+permissions: {}
 
 jobs:
   automerge:
@@ -25,6 +23,10 @@ jobs:
       github.event.pull_request.user.login == 'dependabot[bot]' &&
       github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+      pull-requests: write
     steps:
       - name: Approve pull request
         run: |
