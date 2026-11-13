@@ -45,7 +45,6 @@ Exit codes:
 
 import os
 import sys
-import importlib
 import traceback
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
