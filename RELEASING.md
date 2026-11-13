@@ -35,12 +35,14 @@ A push to `main` looks up the pull request for that commit. When the pull reques
 
 Do this before the next `release/*` merge. This change does not edit repository or PyPI settings.
 
-1. On PyPI, add a trusted publisher for [python-proxy-headers](https://pypi.org/manage/project/python-proxy-headers/settings/publishing/):
+1. On PyPI, confirm the existing trusted publisher for
+   [python-proxy-headers](https://pypi.org/manage/project/python-proxy-headers/settings/publishing/):
    - Owner: `proxymesh`
    - Repository: `python-proxy-headers`
    - Workflow: `publish.yml`
-   - Environment: leave blank
-2. After one successful publish, remove the PyPI trusted publisher with environment `pypi`, then delete the `pypi` and `testpypi` GitHub environments and any PYPI_API_TOKEN secret.
+   - Environment: blank (if set, for example `pypi`, edit it to blank)
+2. After one successful publish, delete the unused `pypi` and `testpypi`
+   GitHub environments and any PYPI_API_TOKEN secret.
 3. Settings → Actions → General → Workflow permissions: allow GitHub Actions to create pull requests. Dependabot auto-merge already needs that.
 
 ## Tags
