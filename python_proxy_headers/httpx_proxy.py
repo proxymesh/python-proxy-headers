@@ -85,7 +85,7 @@ class ProxyTunnelHTTPConnection(TunnelHTTPConnection):
 
 				# Create the HTTP/1.1 or HTTP/2 connection
 				if http2_negotiated or (self._http2 and not self._http1):
-					from httpcore._sync.http2 import HTTP2Connection
+					from httpcore._sync.http2 import HTTP2Connection  # noqa: PLC0415
 
 					self._connection = HTTP2Connection(
 						origin=self._remote_origin,
@@ -175,7 +175,7 @@ class AsyncProxyTunnelHTTPConnection(AsyncTunnelHTTPConnection):
 
 				# Create the HTTP/1.1 or HTTP/2 connection
 				if http2_negotiated or (self._http2 and not self._http1):
-					from httpcore._async.http2 import AsyncHTTP2Connection
+					from httpcore._async.http2 import AsyncHTTP2Connection  # noqa: PLC0415
 
 					self._connection = AsyncHTTP2Connection(
 						origin=self._remote_origin,

@@ -169,9 +169,9 @@ class ProxyAutoScraper(AutoScraper):
         Returns:
             BeautifulSoup object
         """
-        from html import unescape
-        from bs4 import BeautifulSoup
-        from autoscraper.utils import normalize
+        from html import unescape  # noqa: PLC0415
+        from bs4 import BeautifulSoup  # noqa: PLC0415
+        from autoscraper.utils import normalize  # noqa: PLC0415
         
         if html:
             html = normalize(unescape(html))
@@ -209,7 +209,7 @@ class ProxyAutoScraper(AutoScraper):
         Returns:
             List of similar results
         """
-        from autoscraper.utils import normalize, unique_hashable, unique_stack_list
+        from autoscraper.utils import normalize, unique_hashable, unique_stack_list  # noqa: PLC0415
         
         if not wanted_list and not (wanted_dict and any(wanted_dict.values())):
             raise ValueError("No targets were supplied")

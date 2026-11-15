@@ -44,7 +44,7 @@ class ValidateHeadersTests(unittest.TestCase):
             validate_headers({"X-ProxyMesh-Country": "US\x00evil"})
 
     def test_proxy_from_url_rejects_crlf(self) -> None:
-        from python_proxy_headers.urllib3_proxy_manager import proxy_from_url
+        from python_proxy_headers.urllib3_proxy_manager import proxy_from_url  # noqa: PLC0415
 
         with self.assertRaises(ValueError):
             proxy_from_url(
@@ -55,15 +55,15 @@ class ValidateHeadersTests(unittest.TestCase):
             )
 
     def test_requests_adapter_rejects_crlf(self) -> None:
-        from python_proxy_headers.requests_adapter import ProxySession
+        from python_proxy_headers.requests_adapter import ProxySession  # noqa: PLC0415
 
         with self.assertRaises(ValueError):
             ProxySession(proxy_headers={"X-ProxyMesh-Country": "US\r\nX-Injected: pwned"})
 
     def test_pycurl_rejects_crlf(self) -> None:
         try:
-            import pycurl
-            from python_proxy_headers.pycurl_proxy import set_proxy_headers
+            import pycurl  # noqa: PLC0415
+            from python_proxy_headers.pycurl_proxy import set_proxy_headers  # noqa: PLC0415
         except ImportError:
             self.skipTest("pycurl is not installed")
         curl = pycurl.Curl()
@@ -99,7 +99,7 @@ class ValidateHeadersTests(unittest.TestCase):
 
     def test_pycurl_request_rejects_file_scheme(self) -> None:
         try:
-            from python_proxy_headers.pycurl_proxy import get, request
+            from python_proxy_headers.pycurl_proxy import get, request  # noqa: PLC0415
         except ImportError:
             self.skipTest("pycurl is not installed")
         with self.assertRaises(ValueError):
@@ -111,7 +111,7 @@ class ValidateHeadersTests(unittest.TestCase):
 
     def test_pycurl_request_rejects_origin_header_and_method_crlf(self) -> None:
         try:
-            from python_proxy_headers.pycurl_proxy import request
+            from python_proxy_headers.pycurl_proxy import request  # noqa: PLC0415
         except ImportError:
             self.skipTest("pycurl is not installed")
         with self.assertRaises(ValueError):
@@ -320,8 +320,8 @@ class _LocalHttpsProxy:
 
 class ConnectMergeIntegrationTests(unittest.TestCase):
     def test_urllib3_does_not_copy_hostile_connect_headers(self) -> None:
-        import urllib3
-        from python_proxy_headers.requests_adapter import ProxySession
+        import urllib3  # noqa: PLC0415
+        from python_proxy_headers.requests_adapter import ProxySession  # noqa: PLC0415
 
         urllib3.disable_warnings()
         helper = _LocalHttpsProxy(
@@ -355,7 +355,7 @@ class ConnectMergeIntegrationTests(unittest.TestCase):
             helper.close()
 
     def test_urllib3_does_not_send_injected_connect_header(self) -> None:
-        from python_proxy_headers.urllib3_proxy_manager import proxy_from_url
+        from python_proxy_headers.urllib3_proxy_manager import proxy_from_url  # noqa: PLC0415
 
         helper = _LocalHttpsProxy(b"")
         helper.start()
