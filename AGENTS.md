@@ -49,6 +49,8 @@ Read `.cursorrules` too (git identity, PR footer rule).
   calls. Retries: use the repo's retry library, not hand-rolled loops.
 - Tests: cover the behavior change, reuse existing test layout and
   fixtures, no giant harnesses when a focused test works.
+- Docs and examples use `proxy.example.com` placeholders; see
+  https://docs.proxymesh.com/.
 - Use standard linters and tools instead of writing custom checkers, dev
   servers or check runners.
 - Shell scripts follow the Google Shell Style Guide (`main`, `set -euo
@@ -76,7 +78,6 @@ Read `.cursorrules` too (git identity, PR footer rule).
 | Scoped permissions, no dangerous triggers | zizmor in `scripts/lint.sh` |
 | No `${{ }}` in `run:` | zizmor in `scripts/lint.sh` |
 | Shell scripts pass shellcheck and shfmt | `scripts/lint.sh` (style: review) |
-| No real ProxyMesh proxy hostnames | hostname grep in `scripts/lint.sh` |
 | Python passes ruff | `ruff check` in `scripts/lint.sh` |
 | Imports at module top, no print | review (PLC0415, T201 planned) |
 | Actions pinned to full SHAs | zizmor; SHA comment: review |
