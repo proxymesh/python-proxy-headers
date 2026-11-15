@@ -68,6 +68,14 @@ jobs:
           python -m pip install --upgrade pip
           pip install -e ".[urllib3,requests,httpx,aiohttp,pycurl,cloudscraper,autoscraper]"
 
+      - name: Build and check the package
+        run: |
+          pip install build twine
+          python -m build
+          twine check dist/*
+          pip install --no-deps --force-reinstall dist/*.whl
+          cd "${RUNNER_TEMP}" && python -c 'import python_proxy_headers'
+
       - name: Require PROXY_URL Actions secret
         env:
           PROXY_URL: ${{ secrets.PROXY_URL }}
