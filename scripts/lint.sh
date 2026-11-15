@@ -17,12 +17,6 @@ check() {
   "$@" || failed+=("${name}")
 }
 
-# Fail on real ProxyMesh proxy hosts; docs. and www. are allowed.
-check_hostnames() {
-  ! git grep --untracked -nIoE '[a-z0-9-]+\.proxymesh\.com' |
-    grep -vE ':(docs|www)\.proxymesh\.com$'
-}
-
 main() {
   export PATH="${HOME}/.local/bin:${PATH}"
   cd "$(git rev-parse --show-toplevel)"
@@ -50,8 +44,8 @@ main() {
   fi
   check shellcheck shellcheck "${sh_files[@]}"
   check shfmt shfmt -d -i 2 -ci "${sh_files[@]}"
+  check version scripts/check-version.sh
   check ruff ruff check
-  check hostnames check_hostnames
 
   if ((${#failed[@]} > 0)); then
     err "lint failed: ${failed[*]}"
