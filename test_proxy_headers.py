@@ -174,7 +174,7 @@ class Urllib3Test(ModuleTest):
     
     def test(self, config: TestConfig) -> TestResult:
         try:
-            from python_proxy_headers.urllib3_proxy_manager import proxy_from_url
+            from python_proxy_headers.urllib3_proxy_manager import proxy_from_url  # noqa: PLC0415
             
             # Create proxy manager (ProxyHeaderManager) with optional proxy headers
             manager = proxy_from_url(
@@ -229,7 +229,7 @@ class RequestsTest(ModuleTest):
     
     def test(self, config: TestConfig) -> TestResult:
         try:
-            from python_proxy_headers.requests_adapter import ProxySession
+            from python_proxy_headers.requests_adapter import ProxySession  # noqa: PLC0415
             
             # Create session with optional proxy headers to send
             with ProxySession(proxy_headers=config.proxy_headers_to_send or None) as session:
@@ -284,9 +284,9 @@ class AiohttpTest(ModuleTest):
     
     def test(self, config: TestConfig) -> TestResult:
         try:
-            import asyncio
-            from python_proxy_headers.aiohttp_proxy import ProxyClientSession
-            from multidict import CIMultiDict
+            import asyncio  # noqa: PLC0415
+            from python_proxy_headers.aiohttp_proxy import ProxyClientSession  # noqa: PLC0415
+            from multidict import CIMultiDict  # noqa: PLC0415
             
             async def _test_async():
                 # ProxyClientSession automatically includes ProxyTCPConnector
@@ -351,8 +351,8 @@ class HttpxTest(ModuleTest):
     
     def test(self, config: TestConfig) -> TestResult:
         try:
-            from python_proxy_headers.httpx_proxy import HTTPProxyTransport
-            import httpx
+            from python_proxy_headers.httpx_proxy import HTTPProxyTransport  # noqa: PLC0415
+            import httpx  # noqa: PLC0415
             
             # Build proxy with optional headers
             proxy_headers_to_send = config.proxy_headers_to_send
@@ -411,7 +411,7 @@ class PycurlTest(ModuleTest):
     
     def test(self, config: TestConfig) -> TestResult:
         try:
-            from python_proxy_headers.pycurl_proxy import get
+            from python_proxy_headers.pycurl_proxy import get  # noqa: PLC0415
             
             # Make request using high-level API
             response = get(
@@ -465,7 +465,7 @@ class CloudscraperTest(ModuleTest):
     
     def test(self, config: TestConfig) -> TestResult:
         try:
-            from python_proxy_headers.cloudscraper_proxy import create_scraper
+            from python_proxy_headers.cloudscraper_proxy import create_scraper  # noqa: PLC0415
             
             # Create scraper with optional proxy headers to send
             scraper = create_scraper(proxy_headers=config.proxy_headers_to_send or None)
@@ -520,7 +520,7 @@ class AutoscraperTest(ModuleTest):
     
     def test(self, config: TestConfig) -> TestResult:
         try:
-            from python_proxy_headers.autoscraper_proxy import ProxyAutoScraper
+            from python_proxy_headers.autoscraper_proxy import ProxyAutoScraper  # noqa: PLC0415
             
             # Create scraper with optional proxy headers to send
             scraper = ProxyAutoScraper(proxy_headers=config.proxy_headers_to_send or None)
