@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 0.2.5 - 2026-11-16
 
 - Importing `python_proxy_headers.httpx_proxy` on httpx >= 1 raises `ImportError`. httpx 1.0 removed proxy support. The `[httpx]` extra is `httpx>=0.28,<1`.
 - Optional extras pin the client ranges CI installs: `[urllib3]`, `[requests]`, `[httpx]`, `[aiohttp]`, `[pycurl]`, `[cloudscraper]`, and `[autoscraper]`.
