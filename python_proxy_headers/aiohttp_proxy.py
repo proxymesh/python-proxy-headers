@@ -1,3 +1,5 @@
+"""aiohttp client integration that sends proxy headers on CONNECT and merges proxy response headers back."""
+
 from http import HTTPStatus
 from aiohttp.client_reqrep import ClientRequest, ClientResponse
 from aiohttp.connector import TCPConnector, Connection

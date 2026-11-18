@@ -1,3 +1,5 @@
+"""requests Session integration that sends proxy headers on CONNECT and exposes proxy response headers."""
+
 from requests.adapters import HTTPAdapter
 from requests.sessions import Session
 from .header_utils import validate_headers
