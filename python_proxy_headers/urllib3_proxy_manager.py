@@ -1,3 +1,5 @@
+"""urllib3 ProxyManager integration that sends proxy headers on CONNECT and merges proxy response headers back."""
+
 import http
 import sys
 from http.client import _read_headers

@@ -1,3 +1,5 @@
+"""httpx client integration that sends proxy headers on CONNECT and merges proxy response headers back."""
+
 import httpx
 
 if not httpx.__version__.startswith("0."):

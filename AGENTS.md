@@ -1,7 +1,5 @@
 # Agent instructions
 
-Read `.cursorrules` too (git identity, PR footer rule).
-
 ## Checks (run before every push)
 
 - `scripts/lint.sh` must pass. CI runs the same command. Tools come from
@@ -29,7 +27,7 @@ Read `.cursorrules` too (git identity, PR footer rule).
 ## Code standards (the owner rejects PRs that miss these)
 
 - Follow PEP 8, the Google Python Style Guide, and the Google Shell Style
-  Guide (see `.cursorrules`). Run the repo linters and fix everything.
+  Guide. Run the repo linters and fix everything.
 - Imports at the top of the module. No imports inside functions, methods
   or class bodies. A guarded try/except ImportError at module top is fine
   where versions truly differ.

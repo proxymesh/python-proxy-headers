@@ -3,15 +3,15 @@
 [![Documentation Status](https://readthedocs.org/projects/python-proxy-headers/badge/?version=latest)](https://python-proxy-headers.readthedocs.io/en/latest/?badge=latest)
 [![PyPI version](https://badge.fury.io/py/python-proxy-headers.svg)](https://badge.fury.io/py/python-proxy-headers)
 
-Extensions for Python HTTP libraries to support **sending and receiving custom proxy headers** during HTTPS CONNECT tunneling.
+Extensions for Python HTTP libraries that send custom **proxy headers** on HTTPS CONNECT and read **proxy response headers** back. Works with any proxy provider; works best with ProxyMesh.
 
 ## The Problem
 
 When making HTTPS requests through a proxy, the connection is established via a CONNECT tunnel. During this process:
 
-1. **Sending headers to the proxy** - Most Python HTTP libraries don't provide an easy way to send custom headers (like `X-ProxyMesh-Country`) to the proxy server during the CONNECT handshake.
+1. **Sending proxy headers** - Most Python HTTP libraries don't provide an easy way to send custom **proxy headers** (like `X-ProxyMesh-Country`) to the proxy server during the CONNECT handshake.
 
-2. **Receiving headers from the proxy** - The proxy's response headers from the CONNECT request are typically discarded, making it impossible to read custom headers (like `X-ProxyMesh-IP`) that the proxy sends back.
+2. **Reading proxy response headers** - The proxy's CONNECT response headers are typically discarded, making it impossible to read **proxy response headers** (like `X-ProxyMesh-IP`) that the proxy sends back.
 
 This library solves both problems for popular Python HTTP libraries.
 
@@ -60,7 +60,7 @@ with ProxySession(proxy_headers={'X-ProxyMesh-Country': 'US'}) as session:
     session.proxies = {'https': 'http://user:pass@proxy.example.com:8080'}
     response = session.get('https://httpbin.org/ip')
     
-    # Proxy headers are merged into response.headers
+    # Proxy response headers are merged into response.headers
     print(response.headers.get('X-ProxyMesh-IP'))
 ```
 
@@ -90,7 +90,7 @@ async def main():
             'https://httpbin.org/ip',
             proxy='http://user:pass@proxy.example.com:8080'
         ) as response:
-            # Proxy headers merged into response.headers
+            # Proxy response headers merged into response.headers
             print(response.headers.get('X-ProxyMesh-IP'))
 
 asyncio.run(main())
@@ -112,7 +112,7 @@ capture = HeaderCapture(c)
 
 c.perform()
 
-print(capture.proxy_headers)  # Headers from proxy CONNECT response
+print(capture.proxy_headers)  # Proxy response headers from the CONNECT response
 c.close()
 ```
 
@@ -165,9 +165,9 @@ For detailed documentation, API reference, and more examples:
 - **[ruby-proxy-headers](https://github.com/proxymesh/ruby-proxy-headers)** - Send and read custom proxy headers on HTTPS CONNECT for Ruby HTTP clients
 - **[scrapy-proxy-headers](https://github.com/proxymesh/scrapy-proxy-headers)** - Proxy header support for Scrapy
 
-## About
+## Why ProxyMesh
 
-Created by [ProxyMesh](https://proxymesh.com) to help our customers use custom headers to control proxy behavior. Works with any proxy that supports custom headers.
+[ProxyMesh](https://proxymesh.com) runs rotating datacenter and residential proxies with header-based controls documented at [docs.proxymesh.com](https://docs.proxymesh.com/). This library helps customers use those features from Python. It works with any proxy that supports custom headers on CONNECT, not only ProxyMesh.
 
 ## License
 
