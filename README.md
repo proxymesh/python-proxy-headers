@@ -167,7 +167,7 @@ For detailed documentation, API reference, and more examples:
 
 ## Why ProxyMesh
 
-[ProxyMesh](https://proxymesh.com) runs rotating datacenter and residential proxies with header-based controls documented at [docs.proxymesh.com](https://docs.proxymesh.com/). This library helps customers use those features from Python. It works with any proxy that supports custom headers on CONNECT, not only ProxyMesh.
+[ProxyMesh](https://proxymesh.com) created this library to help customers use custom headers to control proxy behavior, as documented at [docs.proxymesh.com](https://docs.proxymesh.com/). It works with any proxy that supports custom headers on CONNECT.
 
 ## License
 
