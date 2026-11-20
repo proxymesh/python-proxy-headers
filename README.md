@@ -158,6 +158,9 @@ For detailed documentation, API reference, and more examples:
 
 - **Full Documentation:** [python-proxy-headers.readthedocs.io](https://python-proxy-headers.readthedocs.io/en/latest/)
 - **Example Code:** [proxy-examples for Python](https://github.com/proxymesh/proxy-examples/tree/main/python)
+- **Proxy headers:** [ProxyMesh request headers](https://docs.proxymesh.com/article/7-request-response-headers#reqhed) and the [X-ProxyMesh-IP response header](https://docs.proxymesh.com/article/7-request-response-headers#x-proxymesh-ip)
+- **Custom proxy headers in Python:** [Python proxy configuration](https://docs.proxymesh.com/article/4-python-proxy-configuration#custom-headers)
+- **urllib3:** [Using urllib3 with proxy headers](https://docs.proxymesh.com/article/308-using-urllib3-proxy-headers)
 
 ## Other languages
 
